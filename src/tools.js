@@ -31,6 +31,12 @@ function findTag(html, id) {
   return { tag, openStart, openEnd, closeStart: html.length, closeEnd: html.length, openTag: m[0] };
 }
 
+// Keys are kept in camelCase inside this module and converted back to kebab-case on write.
+function camelName(key) {
+  if (key.startsWith('--')) return key;
+  return key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+}
+
 function readStyle(openTag) {
   const m = openTag.match(/style="([^"]*)"/);
   const out = {};
@@ -38,15 +44,21 @@ function readStyle(openTag) {
   for (const part of m[1].split(';')) {
     const idx = part.indexOf(':');
     if (idx < 0) continue;
-    out[part.slice(0, idx).trim()] = part.slice(idx + 1).trim();
+    out[camelName(part.slice(0, idx).trim())] = part.slice(idx + 1).trim();
   }
   return out;
+}
+
+// Inline CSS in an HTML attribute is kebab-case, so camelCase keys have to be converted.
+function cssName(key) {
+  if (key.startsWith('--')) return key;
+  return key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 }
 
 function writeStyle(openTag, style) {
   const body = Object.entries(style)
     .filter(([, v]) => v !== '' && v != null)
-    .map(([k, v]) => `${k}: ${v}`)
+    .map(([k, v]) => `${cssName(k)}: ${v}`)
     .join('; ');
   if (/style="[^"]*"/.test(openTag)) return openTag.replace(/style="[^"]*"/, `style="${body}"`);
   return openTag.replace(/>$/, ` style="${body}">`);

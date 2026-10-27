@@ -27,7 +27,7 @@ test('set_text refuses an element that has children', () => {
 test('set_style writes a whitelisted property', () => {
   const out = applyTool(HTML, 'set_style', { id: '3', property: 'fontSize', value: '22px' });
   assert.equal(out.ok, true);
-  assert.match(out.html, /style="fontSize: 22px"/);
+  assert.match(out.html, /style="font-size: 22px"/);
 });
 
 test('set_style rejects a property outside the whitelist', () => {
@@ -39,7 +39,7 @@ test('scale_font multiplies the current size', () => {
   const styled = applyTool(HTML, 'set_style', { id: '3', property: 'fontSize', value: '10px' });
   const out = applyTool(styled.html, 'scale_font', { id: '3', factor: 2 });
   assert.equal(out.ok, true);
-  assert.match(out.html, /fontSize: 20px/);
+  assert.match(out.html, /font-size: 20px/);
 });
 
 test('move_element swaps a sibling order', () => {
