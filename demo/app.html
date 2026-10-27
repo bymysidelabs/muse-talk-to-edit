@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>할 일 메모</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f4f5f7; color: #16181d; }
+  .phone { max-width: 390px; margin: 0 auto; min-height: 100vh; background: #fff; display: flex; flex-direction: column; }
+  header { padding: 22px 20px 14px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
+  .sub { margin: 6px 0 0; color: #6b7280; font-size: 14px; }
+  ul { list-style: none; margin: 0; padding: 0 16px; flex: 1; }
+  li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 12px; border-radius: 12px; background: #fafafa; margin-bottom: 10px; }
+  .label { font-size: 16px; }
+  .meta { font-size: 12px; color: #6b7280; }
+  footer { padding: 16px 20px 28px; }
+  .save { width: 100%; padding: 12px 16px; font-size: 14px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <header data-bve-id="1">
+    <h1 data-bve-id="2">오늘 할 일</h1>
+    <p class="sub" data-bve-id="3">세 개만 골라서 끝내기</p>
+  </header>
+  <ul data-bve-id="4">
+    <li data-bve-id="5">
+      <span class="label" data-bve-id="6">전입신고 서류 챙기기</span>
+      <span class="meta" data-bve-id="7">오전</span>
+    </li>
+    <li data-bve-id="8">
+      <span class="label" data-bve-id="9">분리수거 그물망 사기</span>
+      <span class="meta" data-bve-id="10">오후</span>
+    </li>
+    <li data-bve-id="11">
+      <span class="label" data-bve-id="12">도시가스 자동이체 확인</span>
+      <span class="meta" data-bve-id="13">저녁</span>
+    </li>
+  </ul>
+  <footer data-bve-id="14">
+    <button class="save" data-bve-id="15">저장</button>
+  </footer>
+</div>
+<script>
+  // The harness posts the page HTML to the server; a real client would also send
+  // a screenshot for the verify pass. This page stays dumb on purpose.
+  window.bveGetHtml = () => document.documentElement.outerHTML;
+</script>
+</body>
+</html>

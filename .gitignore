@@ -1,0 +1,13 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# deps / build
+node_modules/
+dist/
+build/
+.DS_Store
+*.log

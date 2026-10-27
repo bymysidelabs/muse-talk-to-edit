@@ -1,0 +1,12 @@
+{
+  "name": "muse-talk-to-edit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Talk-to-edit agent for small phone apps, built on Meta Muse models.",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=18" }
+}
