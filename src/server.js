@@ -6,10 +6,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { editOnce } from './agent.js';
+import { appRoutes, mcpRoute } from './app/routes.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEMO = path.join(HERE, '..', 'demo', 'app.html');
 const UI = path.join(HERE, '..', 'public', 'index.html');
+const STUDIO = path.join(HERE, '..', 'public', 'studio.html');
 const PORT = Number(process.env.PORT || 8787);
 
 function json(res, code, body) {
@@ -41,6 +43,15 @@ function readBody(req) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    const url = new URL(req.url, 'http://localhost');
+    if (req.method === 'GET' && url.pathname === '/studio') {
+      const html = await readFile(STUDIO, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+      return;
+    }
+    if (await mcpRoute(req, res, url, readBody, json)) return;
+    if (await appRoutes(req, res, url, readBody, json)) return;
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
       const html = await readFile(UI, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });

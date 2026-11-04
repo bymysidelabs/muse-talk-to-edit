@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repeat less, together</title>
+<style>
+  :root { --ink:#17181b; --muted:#6b6f78; --line:#e6e4df; --paper:#f7f6f2; --card:#fff; --ok:#1f7a4a; --bad:#b3261e; --warn:#9a6200; --accent:#2b4fd8; --mono: ui-monospace,"SF Mono",Menlo,monospace; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif; color:var(--ink); background:var(--paper); }
+  .wrap { display:grid; grid-template-columns: 300px 300px 1fr; gap:20px; padding:18px 24px; height:100vh; }
+  .ph { display:flex; flex-direction:column; align-items:center; min-height:0; }
+  .who { font-size:13px; color:var(--muted); margin:0 0 8px; height:20px; }
+  .who b { color:var(--ink); }
+  .phone { width:300px; flex:1; max-height:820px; border-radius:40px; background:#111; padding:10px; box-shadow:0 20px 40px -24px #0006; }
+  .phone iframe { width:100%; height:100%; border:0; border-radius:31px; background:#fdfcf9; }
+  .phone.empty { background:#e9e7e1; display:flex; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:30px; font-size:13px; }
+  .side { display:flex; flex-direction:column; min-height:0; }
+  h1 { font-size:20px; margin:2px 0 4px; letter-spacing:-0.01em; }
+  .cap { min-height:56px; font-size:15px; color:#2b2d33; margin:0 0 10px; }
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { font:inherit; font-size:13px; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; }
+  .tab.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .pane { display:none; flex-direction:column; gap:10px; min-height:0; flex:1; overflow:auto; }
+  .pane.on { display:flex; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .card h2 { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px; font-weight:600; }
+  textarea { width:100%; height:170px; font:12px/1.5 var(--mono); border:1px solid var(--line); border-radius:10px; padding:10px; resize:none; background:#fbfaf7; }
+  .btn { font:inherit; padding:9px 14px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; }
+  .btn.ghost { background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font:inherit; font-size:12.5px; padding:5px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  .tag { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; background:#f1f0ec; margin:0 4px 4px 0; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .warn { color:var(--warn); }
+  .muted { color:var(--muted); font-size:12px; }
+  .msg { font-size:15px; margin:4px 0; }
+  .call { font:12px/1.5 var(--mono); background:#f6f5f1; border-radius:8px; padding:6px 8px; margin:4px 0; white-space:pre-wrap; word-break:break-all; }
+  input.q { flex:1; font:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; min-width:200px; }
+  select { font:inherit; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  .log { font-size:12.5px; }
+  .log div { padding:4px 0; border-top:1px solid #f0eee9; }
+  .log div:first-child { border-top:0; }
+  .chk { display:flex; gap:6px; font-size:13px; }
+  .num { font-family:var(--mono); font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ph"><p class="who" id="whoA"><b>민재</b> owner</p><div class="phone empty" id="phoneA">No app yet. The agent will propose one.</div></div>
+  <div class="ph"><p class="who" id="whoB">Not invited yet</p><div class="phone empty" id="phoneB">Invite someone to work in the same app.</div></div>
+  <div class="side">
+    <h1>Repeat less, together</h1>
+    <p class="cap" id="cap">The agent notices a chore you keep repeating, builds a small app for it, then works inside that app with you and the people you invite.</p>
+    <div class="tabs">
+      <button class="tab on" data-pane="notice">1 Notice</button>
+      <button class="tab" data-pane="use">2 Use</button>
+      <button class="tab" data-pane="together">3 Together</button>
+      <button class="tab" data-pane="look">4 Change the look</button>
+    </div>
+
+    <div class="pane on" id="notice">
+      <div class="card"><h2>Last two weeks on your phone</h2><textarea id="history"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="find">Find what repeats</button><span class="muted" id="findMeta"></span></div></div>
+      <div class="card" id="proposal" style="display:none"><h2>What the agent proposes</h2><div id="proposalBody"></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="build">Build it and import 3 months of card texts</button><span class="muted" id="buildMeta"></span></div></div>
+    </div>
+
+    <div class="pane" id="use">
+      <div class="card"><h2>Tell your agent</h2>
+        <div class="row"><select id="asWho"></select><input class="q" id="ask" placeholder="paste a card text or ask a question"><button class="btn" id="go">Send</button></div>
+        <div class="chips" id="useChips" style="margin-top:8px"></div></div>
+      <div class="card" id="trace"><h2>What the agent did inside the app</h2><p class="muted">Nothing yet.</p></div>
+    </div>
+
+    <div class="pane" id="together">
+      <div class="card"><h2>Invite</h2>
+        <div class="row"><input class="q" id="inviteName" value="아내"><button class="btn" id="invite">Invite as member</button></div>
+        <p class="muted" id="inviteMeta" style="margin:8px 0 0">Members can add records and use the app. Only the owner can change prices, delete history or change how the app looks.</p></div>
+      <div class="card"><h2>Who did what</h2><div class="log" id="log"><p class="muted">No activity yet.</p></div></div>
+    </div>
+
+    <div class="pane" id="look">
+      <div class="card"><h2>Change how the app looks, by talking</h2>
+        <div class="row"><select id="lookWho"></select><input class="q" id="lookQ" placeholder="e.g. 이번 달 외식 카드를 맨 앞으로"><button class="btn" id="lookGo">Edit</button></div>
+        <div class="chips" id="lookChips" style="margin-top:8px"></div></div>
+      <div class="card" id="lookTrace"><h2>Checks</h2><p class="muted">Every change is applied only if the target changed as asked, nothing else changed, and the app's own buttons still work.</p></div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const PRICE = { in: 1.25e-6, out: 4.25e-6 };
+const S = { spec: null, appId: null, members: [], proposal: null };
+
+document.querySelectorAll('.tab').forEach((t) => t.onclick = () => showPane(t.dataset.pane));
+function showPane(id) {
+  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x.dataset.pane === id));
+  document.querySelectorAll('.pane').forEach((x) => x.classList.toggle('on', x.id === id));
+}
+window.showPane = showPane;
+window.setCap = (h) => { $('#cap').innerHTML = h; };
+
+async function api(path, body, token) {
+  const res = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  return res.json();
+}
+const usageLine = (u, ms) => `Muse Spark 1.3, ${(ms / 1000).toFixed(1)}s, ${(u.input + u.output).toLocaleString()} tokens ($${(u.input * PRICE.in + u.output * PRICE.out).toFixed(4)})`;
+
+function mountPhone(el, who, member) {
+  el.classList.remove('empty');
+  el.innerHTML = `<iframe title="${esc(member.name)}"></iframe>`;
+  el.querySelector('iframe').src = `/a/${S.appId}?t=${member.token}`;
+  who.innerHTML = `<b>${esc(member.name)}</b> ${member.role}`;
+}
+function reloadPhones() { document.querySelectorAll('.phone iframe').forEach((f) => { f.src = f.src; }); }
+function memberSelects() {
+  $('#lookWho').innerHTML = S.members.map((m, i) => `<option value="${i}">${esc(m.name)}</option>`).join('');
+  $('#asWho').innerHTML = S.members.map((m, i) => `<option value="${i}">${esc(m.name)}'s agent</option>`).join('')
+    + S.members.slice(1).map((m, j) => `<option value="mcp:${j + 1}">${esc(m.name)}'s own agent over MCP</option>`).join('');
+}
+
+// 1 Notice
+(async () => { $('#history').value = (await api('/api/demo/history')).history; })();
+$('#find').onclick = async () => {
+  $('#find').disabled = true; $('#findMeta').textContent = 'Reading…';
+  const r = await api('/api/propose', { history: $('#history').value });
+  $('#find').disabled = false;
+  if (!r.spec) { $('#findMeta').innerHTML = `<span class="bad">${esc(r.message || 'no proposal')}</span>`; return; }
+  S.proposal = r.spec;
+  $('#findMeta').textContent = usageLine(r.usage, r.ms);
+  const f = r.spec.entity.fields.map((x) => `<span class="tag">${esc(x.label)} <span class="num">${x.type}</span></span>`).join('');
+  const cards = r.spec.summaries.map((x) => `<span class="tag">${esc(x.label)}</span>`).join('');
+  const checks = r.steps.filter((s) => s.type === 'validate').map((s) => s.ok ? '<div class="chk"><span class="ok">✓</span>Spec checked: field types, keys, summary targets, filters</div>' : `<div class="chk"><span class="bad">✗</span>${esc(s.errors.join('; '))}</div>`).join('');
+  $('#proposalBody').innerHTML = `<p class="msg">${esc(r.message)}</p><div class="muted" style="margin:6px 0 2px">App: <b style="color:var(--ink)">${esc(r.spec.title)}</b>. The agent wrote a spec, not code.</div><div>${f}</div><div class="muted" style="margin:6px 0 2px">Cards</div><div>${cards}</div><div style="margin-top:6px">${checks}</div>`;
+  $('#proposal').style.display = '';
+};
+$('#build').onclick = async () => {
+  $('#build').disabled = true; $('#buildMeta').textContent = 'Building…';
+  const r = await api('/api/apps', { spec: S.proposal, ownerName: '민재', seedDemo: true });
+  if (!r.ok) { $('#buildMeta').innerHTML = `<span class="bad">${esc(r.error)}</span>`; $('#build').disabled = false; return; }
+  S.appId = r.id; S.members = [{ name: '민재', role: 'owner', token: r.ownerToken }];
+  memberSelects(); mountPhone($('#phoneA'), $('#whoA'), S.members[0]);
+  const st = await api(`/api/apps/${S.appId}/state`, null, r.ownerToken);
+  $('#buildMeta').textContent = `Built by the fixed renderer. ${st.total.toLocaleString()} past card payments imported.`;
+  setupUseChips(); setupLookChips(); pollLog();
+};
+
+// 2 Use
+async function setupUseChips() {
+  const texts = (await api('/api/demo/texts')).texts.slice(0, 2);
+  const qs = ['지난달 외식비 얼마야?', '10월에 카페 몇 번 갔어?', '10월에 제일 많이 쓴 곳 3개'];
+  $('#useChips').innerHTML = [...texts, ...qs].map((t) => `<button class="chip">${esc(t)}</button>`).join('');
+  $('#useChips').querySelectorAll('.chip').forEach((c) => c.onclick = () => { $('#ask').value = c.textContent; send(); });
+}
+async function send() {
+  const sel = $('#asWho').value;
+  if (sel.startsWith('mcp:')) return sendMcp(S.members[Number(sel.slice(4))]);
+  const m = S.members[Number(sel)]; const msg = $('#ask').value.trim(); if (!m || !msg) return;
+  $('#go').disabled = true; $('#trace').innerHTML = '<h2>What the agent did inside the app</h2><p class="muted">Working…</p>';
+  const r = await api(`/api/apps/${S.appId}/assist`, { message: msg }, m.token);
+  $('#go').disabled = false;
+  const ops = r.steps.filter((s) => s.type === 'op').map((s) => `<div class="call">${esc(s.name)}(${esc(JSON.stringify(s.args))})\n→ ${s.ok ? '<span class="ok">ok</span>' : '<span class="bad">refused</span>'} ${esc(typeof s.result === 'string' ? s.result : JSON.stringify(s.result))}</div>`).join('');
+  $('#trace').innerHTML = `<h2>What ${esc(m.name)}'s agent did inside the app</h2><p class="msg">${esc(r.message)}</p>${ops || '<p class="muted">No app operation.</p>'}<p class="muted">${usageLine(r.usage, r.ms)}. No screenshots, no page reading.</p>`;
+}
+async function sendMcp(m) {
+  const msg = $('#ask').value.trim(); if (!m || !msg) return;
+  $('#go').disabled = true; $('#trace').innerHTML = `<h2>${esc(m.name)}'s own agent, connected over MCP</h2><p class="muted">Connecting…</p>`;
+  const r = await api('/api/demo/mcp-agent', { appId: S.appId, message: msg }, m.token);
+  $('#go').disabled = false;
+  const wire = (r.wire || []).map((w) => {
+    const res = w.result || {};
+    const bad = res.ok === false;
+    const head = w.method === 'tools/call' ? `tools/call ${esc(w.params.name)}(${esc(JSON.stringify(w.params.arguments))})` : esc(w.method);
+    return `<div class="call">${head}\n→ <span class="${bad ? 'bad' : 'ok'}">${bad ? 'refused' : 'ok'}</span> ${esc(JSON.stringify(res))}</div>`;
+  }).join('');
+  $('#trace').innerHTML = `<h2>${esc(m.name)}'s own agent, connected over MCP</h2><p class="msg">${esc(r.message)}</p>${wire}<p class="muted">JSON-RPC to POST /mcp/${esc(S.appId)} with ${esc(m.name)}'s token. Same operations and role checks as the app's buttons. ${(r.ms / 1000).toFixed(1)}s, ${(r.usage.input + r.usage.output).toLocaleString()} tokens.</p>`;
+}
+$('#go').onclick = send; $('#ask').onkeydown = (e) => { if (e.key === 'Enter') send(); };
+
+// 3 Together
+$('#invite').onclick = async () => {
+  const owner = S.members[0]; if (!owner) return;
+  const r = await api(`/api/apps/${S.appId}/invite`, { name: $('#inviteName').value.trim() || '가족', role: 'member' }, owner.token);
+  if (!r.ok) return;
+  const mem = { name: r.name, role: r.role, token: r.token };
+  S.members.push(mem); memberSelects(); mountPhone($('#phoneB'), $('#whoB'), mem);
+  $('#inviteMeta').innerHTML = `${esc(r.name)} joined as <b>member</b>. Her own agent can work here too: the app exposes the same operations over MCP at <span class="num">POST ${esc(r.mcp)}</span> with her token, so a Muse custom connector or Muse Code can act for her with exactly her role.`;
+};
+let logTimer = null;
+function pollLog() {
+  clearInterval(logTimer);
+  logTimer = setInterval(async () => {
+    const owner = S.members[0]; if (!owner) return;
+    const st = await api(`/api/apps/${S.appId}/state`, null, owner.token);
+    const via = { agent: 'via agent', mcp: 'via external agent (MCP)', app: 'in the app', import: 'import' };
+    const what = (l) => l.action === 'refused' ? `<span class="bad">refused</span> <span class="num">${esc(l.values && l.values.tried)}</span>` : `${esc(l.action)} <span class="num">${esc(l.values ? Object.values(l.values).join(' ') : '')}</span>`;
+    $('#log').innerHTML = st.log.slice().reverse().map((l) => `<div><b>${esc(l.who)}</b> ${what(l)} <span class="muted">${esc(via[l.via] || l.via || '')}</span></div>`).join('');
+  }, 1500);
+}
+
+// 4 Change the look (verified editor on the generated app)
+function setupLookChips() {
+  const qs = ['이번 달 외식 카드 글씨를 더 크게 해줘', '추가 버튼 색을 초록색으로 바꿔줘', '지출 추가 버튼 숨겨줘'];
+  $('#lookChips').innerHTML = qs.map((t) => `<button class="chip">${esc(t)}</button>`).join('');
+  $('#lookChips').querySelectorAll('.chip').forEach((c) => c.onclick = () => { $('#lookQ').value = c.textContent; lookEdit(); });
+}
+function sandbox(html) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:-2000px;top:0;width:390px;height:844px;';
+    f.onload = () => resolve(f); f.srcdoc = html; document.body.appendChild(f);
+  });
+}
+async function inspect(html) {
+  const f = await sandbox(html); const d = f.contentDocument; const m = {};
+  d.querySelectorAll('[data-bve-id]').forEach((el) => { const cs = d.defaultView.getComputedStyle(el); m[el.dataset.bveId] = { fontSize: cs.fontSize, color: cs.color, backgroundColor: cs.backgroundColor, display: cs.display }; });
+  const s = []; for (const t of f.contentWindow.__smoke || []) { let ok = false; try { ok = Boolean(await t.run()); } catch (e) {} s.push({ name: t.name, ok }); }
+  f.remove(); return { m, s };
+}
+async function lookEdit() {
+  const m = S.members[Number($('#lookWho').value)]; const q = $('#lookQ').value.trim(); if (!m || !q) return;
+  $('#lookGo').disabled = true; $('#lookTrace').innerHTML = '<h2>Checks</h2><p class="muted">Working…</p>';
+  const owner = S.members[0];
+  const cur = (await api(`/api/apps/${S.appId}/html`, null, owner.token)).html;
+  const before = await inspect(cur);
+  const r = await api(`/api/apps/${S.appId}/edit`, { request: q, computed: before.m }, m.token);
+  $('#lookGo').disabled = false;
+  if (r.status === 'refused' && !r.steps) { $('#lookTrace').innerHTML = `<h2>Checks</h2><p class="msg bad">${esc(r.message)}</p><p class="muted">Role check happens before any model call.</p>`; return; }
+  const steps = (r.steps || []).map((s) => s.type === 'verify' ? `<div class="muted" style="margin-top:6px">Deterministic check: ${esc(s.name)}</div>` + s.checks.map((c) => `<div class="chk"><span class="${c.ok ? 'ok' : 'bad'}">${c.ok ? '✓' : '✗'}</span>${esc(c.label)} <span class="num">${esc(c.detail)}</span></div>`).join('')
+    : s.type === 'review' ? `<div class="chk" style="margin-top:6px"><span class="${s.satisfied ? 'ok' : 'bad'}">${s.satisfied ? '✓' : '✗'}</span>Reviewer (Muse Spark Open): ${esc(s.reason)}</div>`
+    : s.type === 'model' && s.calls.length ? `<div class="call">${s.calls.map((c) => esc(c.name + JSON.stringify(c.args))).join('\n')}</div>` : '').join('');
+  let tail = '';
+  const proposed = r.status === 'done' ? r.html : r.proposedHtml;
+  if (proposed && r.layoutHash) {
+    const after = await inspect(proposed);
+    const broke = after.s.filter((t, i) => !t.ok && before.s[i] && before.s[i].ok).map((t) => t.name);
+    tail = '<div class="muted" style="margin-top:6px">The app\'s own buttons, clicked in a sandbox copy</div>' + after.s.map((t) => `<div class="chk"><span class="${t.ok ? 'ok' : 'bad'}">${t.ok ? '✓' : '✗'}</span>${esc(t.name)}</div>`).join('');
+    if (!broke.length && r.status === 'done') {
+      await api(`/api/apps/${S.appId}/commit-layout`, { hash: r.layoutHash }, m.token); reloadPhones();
+      tail += '<p class="msg ok">Applied for everyone.</p>';
+    } else {
+      tail += `<p class="msg warn">${broke.length ? 'This would break: ' + esc(broke.join(', ')) + '. Kept as it was.' : esc(r.message)}</p>`;
+    }
+  } else if (r.status !== 'done') {
+    tail = `<p class="msg">${esc(r.message)}</p>`;
+  }
+  $('#lookTrace').innerHTML = `<h2>Checks</h2>${steps}${tail}`;
+}
+$('#lookGo').onclick = lookEdit;
+</script>
+</body>
+</html>
