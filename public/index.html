@@ -70,7 +70,7 @@
       <button class="btn ghost" id="undo" disabled>Undo</button>
       <button class="btn ghost" id="reset">Reset app</button>
       <span class="spacer"></span>
-      <span id="meter">Muse Spark 1.3 edits · Muse Spark Open reviews</span>
+      <span id="meter">Edits by Muse Spark 1.3. Reviews by Muse Spark Open.</span>
     </div>
   </div>
 </div>
@@ -82,6 +82,7 @@ const PRESETS = [
   ['바닐라라떼는 당분간 숨겨줘', 'hide vanilla latte'],
   ['아메리카노 가격을 3,800원으로 바꿔줘', 'change a price'],
   ['메뉴에 케이크를 추가해줘', 'add a new item'],
+  ['주문하기 버튼은 숨겨줘', 'hide the order button'],
 ];
 const PRICE = { in: 1.25 / 1e6, out: 4.25 / 1e6 };
 
@@ -131,22 +132,22 @@ function traceHtml(r) {
   const rows = r.steps.map((s) => {
     if (s.type === 'model') {
       const what = s.calls.length ? s.calls.map((c) => `<div class="call">${esc(c.name)}(${esc(JSON.stringify(c.args))})</div>`).join('') : `<div>${esc(s.text || '(no reply)')}</div>`;
-      return `<div class="step"><div class="who">Muse Spark 1.3 · turn ${s.turn} · ${(s.ms / 1000).toFixed(1)}s</div>${what}</div>`;
+      return `<div class="step"><div class="who">Muse Spark 1.3, turn ${s.turn}, ${(s.ms / 1000).toFixed(1)}s</div>${what}</div>`;
     }
     if (s.type === 'verify') {
       const head = s.pass ? '<span class="ok">Verified</span>' : '<span class="bad">Rolled back</span>';
       const chks = s.checks.map((c) => `<div class="chk"><span class="${c.ok ? 'ok' : 'bad'}">${c.ok ? '✓' : '✗'}</span><span>${esc(c.label)}</span><span class="d">${esc(c.detail)}</span></div>`).join('');
-      return `<div class="step"><div class="who">Deterministic check · ${esc(s.name)}</div>${head}${chks}</div>`;
+      return `<div class="step"><div class="who">Deterministic check: ${esc(s.name)}</div>${head}${chks}</div>`;
     }
     if (s.type === 'review') {
       const v = s.satisfied === true ? '<span class="ok">Satisfied</span>' : s.satisfied === false ? '<span class="bad">Not satisfied</span>' : '<span class="warn">No verdict</span>';
-      return `<div class="step"><div class="who">Reviewer · Muse Spark Open · ${(s.ms / 1000).toFixed(1)}s</div>${v} <span>${esc(s.reason)}</span></div>`;
+      return `<div class="step"><div class="who">Reviewer: Muse Spark Open, ${(s.ms / 1000).toFixed(1)}s</div>${v} <span>${esc(s.reason)}</span></div>`;
     }
     if (s.type === 'discarded') return `<div class="step"><div class="who">Tool call discarded</div><span class="bad">${esc(s.name)} is not an allowed tool</span></div>`;
     if (s.type === 'tool_error') return `<div class="step"><div class="who">Tool refused</div><span class="bad">${esc(s.error)}</span></div>`;
     return '';
   }).join('');
-  return `<h2>What the agent did</h2><div><span class="status ${r.status}">${esc(labelFor(r.status))}</span> <span class="who">${(r.ms / 1000).toFixed(1)}s · ${r.failures} retries</span></div><p class="msg">${esc(r.message)}</p>${rows}`;
+  return `<h2>What the agent did</h2><div><span class="status ${r.status}">${esc(labelFor(r.status))}</span> <span class="who">${(r.ms / 1000).toFixed(1)}s, ${r.failures} retries</span></div><p class="msg">${esc(r.message)}</p>${rows}`;
 }
 
 function labelFor(s) { return { done: 'Done', refused: 'Not possible', needs_confirmation: 'Needs your confirmation', rolled_back: 'Rolled back' }[s] || s; }
@@ -183,19 +184,24 @@ async function run(request) {
     const r = await res.json();
     if (!res.ok) throw new Error(r.error || res.status);
     spent += r.usage.input * PRICE.in + r.usage.output * PRICE.out;
-    $('#meter').textContent = `Muse Spark 1.3 edits · Muse Spark Open reviews · tokens this session ≈ $${spent.toFixed(3)}`;
+    $('#meter').textContent = `Edits by Muse Spark 1.3. Reviews by Muse Spark Open. Tokens this session: $${spent.toFixed(3)}`;
 
     const targets = [...new Set(r.applied.map((a) => String(a.args.id)))];
     if (r.status === 'done') {
       const after = await inspect(r.html);
       const broke = after.s.some((t, i) => !t.ok && before.s[i] && before.s[i].ok);
       if (broke) {
-        // Third gate: if a feature that worked before stopped working, keep the old app.
+        // Third gate: the edit did what was asked, but a feature that worked before
+        // stopped working. Keep the old app and let the owner decide.
         await render(current);
-        r.status = 'rolled_back';
-        r.message = 'The edit passed its own checks but broke an existing feature, so it was rolled back.';
+        pending = r.html;
+        const lost = after.s.filter((t, i) => !t.ok && before.s[i] && before.s[i].ok).map((t) => t.name);
+        r.status = 'needs_confirmation';
+        r.message = `This change would break: ${lost.join(', ')}. The app was kept as it was.`;
         $('#trace').innerHTML = traceHtml(r);
-        $('#proof').innerHTML = proofHtml(targets, before, after);
+        $('#proof').innerHTML = proofHtml(targets, before, after, '<div class="foot"><button class="btn" id="apply">Apply anyway</button><button class="btn ghost" id="discard">Keep original</button></div>');
+        $('#apply').onclick = async () => { history.push(current); current = pending; pending = null; await render(current); $('#undo').disabled = false; $('#proof').querySelector('.foot').remove(); };
+        $('#discard').onclick = () => { pending = null; $('#proof').querySelector('.foot').remove(); };
       } else {
         history.push(current); current = r.html; $('#undo').disabled = false;
         $('#trace').innerHTML = traceHtml(r);

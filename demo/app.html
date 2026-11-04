@@ -52,7 +52,7 @@
       <button class="add" data-action="add" data-bve-id="19">담기</button>
     </li>
   </ul>
-  <p class="cart" data-role="cart" data-bve-id="20">장바구니 0잔 · 0원</p>
+  <p class="cart" data-role="cart" data-bve-id="20">장바구니 0잔, 0원</p>
   <footer data-bve-id="21">
     <button class="order" data-action="order" data-bve-id="22">주문하기</button>
     <p class="toast" data-role="toast" data-bve-id="23"></p>
@@ -69,7 +69,7 @@
     const el = item && item.querySelector('[data-role="price"]');
     return el ? Number(el.textContent.replace(/[^0-9]/g, '')) || 0 : 0;
   };
-  const render = () => { $('[data-role="cart"]').textContent = `장바구니 ${state.count}잔 · ${won(state.total)}`; };
+  const render = () => { $('[data-role="cart"]').textContent = `장바구니 ${state.count}잔, ${won(state.total)}`; };
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
