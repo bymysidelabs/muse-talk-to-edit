@@ -58,7 +58,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="ph"><p class="who" id="whoA"><b>민재</b> owner</p><div class="phone empty" id="phoneA">No app yet. The agent will propose one.</div></div>
+  <div class="ph"><p class="who" id="whoA"><b>남편</b> owner</p><div class="phone empty" id="phoneA">No app yet. The agent will propose one.</div></div>
   <div class="ph"><p class="who" id="whoB">Not invited yet</p><div class="phone empty" id="phoneB">Invite someone to work in the same app.</div></div>
   <div class="side">
     <h1>Repeat less, together</h1>
@@ -157,9 +157,9 @@ $('#find').onclick = async () => {
 };
 $('#build').onclick = async () => {
   $('#build').disabled = true; $('#buildMeta').textContent = 'Building…';
-  const r = await api('/api/apps', { spec: S.proposal, ownerName: '민재', seedDemo: true });
+  const r = await api('/api/apps', { spec: S.proposal, ownerName: '남편', seedDemo: true });
   if (!r.ok) { $('#buildMeta').innerHTML = `<span class="bad">${esc(r.error)}</span>`; $('#build').disabled = false; return; }
-  S.appId = r.id; S.members = [{ name: '민재', role: 'owner', token: r.ownerToken }];
+  S.appId = r.id; S.members = [{ name: '남편', role: 'owner', token: r.ownerToken }];
   memberSelects(); mountPhone($('#phoneA'), $('#whoA'), S.members[0]);
   const st = await api(`/api/apps/${S.appId}/state`, null, r.ownerToken);
   $('#buildMeta').textContent = `Built by the fixed renderer. ${st.total.toLocaleString()} past card payments imported.`;
