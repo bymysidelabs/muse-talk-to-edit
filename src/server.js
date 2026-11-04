@@ -1,6 +1,7 @@
 // Tiny static server plus the /api/edit endpoint the demo page calls.
 // No dependencies: node:http and node:fs only.
 
+import './env.js';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -48,6 +49,15 @@ const server = http.createServer(async (req, res) => {
       const html = await readFile(STUDIO, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(html);
+      return;
+    }
+    const voice = url.pathname.match(/^\/voice\/([\w-]+\.wav)$/);
+    if (req.method === 'GET' && voice) {
+      try {
+        const wav = await readFile(path.join(HERE, '..', 'public', 'voice', voice[1]));
+        res.writeHead(200, { 'Content-Type': 'audio/wav', 'Cache-Control': 'no-store' });
+        res.end(wav);
+      } catch { json(res, 404, { error: 'not found' }); }
       return;
     }
     if (await mcpRoute(req, res, url, readBody, json)) return;

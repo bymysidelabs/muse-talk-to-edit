@@ -3,9 +3,13 @@
 // maps to one member and one role.
 
 import { createHash } from 'node:crypto';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { load, getApp, putApp, newId, memberFor, save } from './store.js';
 import { validateSpec } from './spec.js';
-import { renderShell } from './render.js';
+import { renderShell, accentFor } from './render.js';
+import { transcribe, makeIcon } from './media.js';
 import { addEntry, updateEntry, deleteEntry, query, summaries, can } from './ops.js';
 import { propose, assist } from './agentops.js';
 import { editOnce } from '../agent.js';
@@ -15,6 +19,21 @@ import { runMcpAgent } from '../demo/mcpclient.js';
 
 const hash = (s) => createHash('sha256').update(s).digest('hex').slice(0, 16);
 const pendingLayouts = new Map(); // appId -> Map(hash -> { html, by })
+const ICONS = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'icons');
+
+// Muse Image draws the icon in the background; the app shows it when it lands.
+async function drawIcon(app) {
+  app.icon = { status: 'drawing', started: new Date().toISOString() };
+  try {
+    const img = await makeIcon(app.spec, accentFor(app.spec));
+    await mkdir(ICONS, { recursive: true });
+    await writeFile(path.join(ICONS, `${app.id}.${img.format}`), img.bytes);
+    app.icon = { status: 'ready', format: img.format, ms: img.ms, model: img.model, bytes: img.bytes.length };
+  } catch (e) {
+    app.icon = { status: 'failed', error: String(e.message || e).slice(0, 200) };
+  }
+  await save();
+}
 
 function bearer(req) {
   const h = req.headers.authorization || '';
@@ -27,7 +46,7 @@ function activityLine(app) {
   if (last.via === 'import') return `${last.who}: ${last.values && last.values.note ? last.values.note : '기록 가져옴'}`;
   const verb = { add: '추가', update: '변경', delete: '삭제', layout: '화면 수정', join: '참여', refused: '권한 없음' }[last.action] || last.action;
   const what = last.values ? Object.values(last.values).filter((v) => typeof v === 'string').slice(0, 1).join('') : '';
-  const via = last.via === 'agent' ? ' (에이전트)' : last.via === 'mcp' ? ' (외부 에이전트)' : '';
+  const via = last.via === 'agent' ? ' (에이전트)' : last.via === 'voice' ? ' (음성)' : last.via === 'mcp' ? ' (외부 에이전트)' : '';
   return `${last.who}: ${what ? `${what} ` : ''}${verb}${via}`;
 }
 
@@ -41,6 +60,8 @@ export function publicState(app, member) {
     activity: activityLine(app),
     log: app.log.slice(-12),
     members: Object.values(app.members).map((m) => ({ name: m.name, role: m.role })),
+    icon: app.icon || null,
+    taps: app.log.filter((l) => l.via === 'app' && (l.action === 'add' || l.action === 'update')).length,
   };
 }
 
@@ -93,6 +114,7 @@ export async function appRoutes(req, res, url, readBody, json) {
       app.log.push({ at: new Date().toISOString(), who: owner.name, via: 'import', action: 'add', values: { note: `기록 ${app.entries.length}건 가져옴` } });
     }
     await putApp(app);
+    drawIcon(app);
     json(res, 200, { ok: true, id: app.id, ownerToken });
     return true;
   }
@@ -106,6 +128,18 @@ export async function appRoutes(req, res, url, readBody, json) {
     const cfg = `<script>window.__BVE=${JSON.stringify({ appId: app.id, token: member.token })}</script>`;
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(app.html.replace('</head>', `${cfg}</head>`));
+    return true;
+  }
+
+  m = p.match(/^\/a\/([\w-]+)\/icon$/);
+  if (req.method === 'GET' && m) {
+    const app = getApp(m[1]);
+    const member = memberFor(app, url.searchParams.get('t'));
+    if (!member) return json(res, 403, { error: 'invalid link' }), true;
+    if (!app.icon || app.icon.status !== 'ready') return json(res, 404, { error: 'icon not ready', status: app.icon && app.icon.status }), true;
+    const bytes = await readFile(path.join(ICONS, `${app.id}.${app.icon.format}`));
+    res.writeHead(200, { 'Content-Type': `image/${app.icon.format}`, 'Cache-Control': 'private, max-age=3600' });
+    res.end(bytes);
     return true;
   }
 
@@ -129,9 +163,17 @@ export async function appRoutes(req, res, url, readBody, json) {
     case 'update': return json(res, 200, updateEntry(app, member, String(body.id), body.values, 'app')), true;
     case 'delete': return json(res, 200, deleteEntry(app, member, String(body.id), 'app')), true;
     case 'query': return json(res, 200, query(app, member, body)), true;
+    case 'voice': {
+      // A short recording (WAV, base64) from the person's phone.
+      const wav = Buffer.from(String(body.audio || ''), 'base64');
+      if (wav.length > 1_200_000) return json(res, 413, { ok: false, error: 'recording too long' }), true;
+      try { return json(res, 200, await transcribe(app, wav)), true; }
+      catch (e) { return json(res, 400, { ok: false, error: String(e.message || e) }), true; }
+    }
     case 'assist': {
       const msg = String(body.message || '').slice(0, 2000);
-      return json(res, 200, await assist({ app, member, message: msg })), true;
+      const heard = Array.isArray(body.heard) ? body.heard.slice(0, 2).map((h) => String(h || '').slice(0, 500)) : [];
+      return json(res, 200, await assist({ app, member, message: msg, heard })), true;
     }
     case 'invite': {
       if (!can(member, 'invite')) return json(res, 403, { error: 'only the owner can invite' }), true;

@@ -44,6 +44,15 @@
   .log div:first-child { border-top:0; }
   .chk { display:flex; gap:6px; font-size:13px; }
   .num { font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .meter { display:flex; gap:18px; font-size:12.5px; color:var(--muted); margin:-4px 0 10px; }
+  .meter b { color:var(--ink); font-variant-numeric: tabular-nums; }
+  .voice { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; align-items:center; }
+  .say { font:inherit; font-size:12.5px; padding:5px 10px; border-radius:999px; border:1px solid #c9d3f5; background:#f3f6ff; cursor:pointer; }
+  .mic { font:inherit; font-size:12.5px; padding:5px 12px; border-radius:999px; border:1px solid var(--ink); background:#fff; cursor:pointer; }
+  .mic.rec { background:var(--bad); color:#fff; border-color:var(--bad); }
+  .heard { border-left:3px solid #c9d3f5; padding:2px 0 2px 10px; margin-bottom:8px; }
+  .icon { display:flex; gap:10px; align-items:center; margin-top:10px; }
+  .icon img { width:56px; height:56px; border-radius:14px; }
 </style>
 </head>
 <body>
@@ -53,6 +62,7 @@
   <div class="side">
     <h1>Repeat less, together</h1>
     <p class="cap" id="cap">The agent notices a chore you keep repeating, builds a small app for it, then works inside that app with you and the people you invite.</p>
+    <p class="meter" id="meter"><span>Muse tokens used <b id="mTok">0</b></span><span>Agent steps <b id="mSteps">0</b></span><span>Done with the app's own buttons <b id="mTaps">0</b>, 0 tokens</span></p>
     <div class="tabs">
       <button class="tab on" data-pane="notice">1 Notice</button>
       <button class="tab" data-pane="use">2 Use</button>
@@ -70,7 +80,8 @@
     <div class="pane" id="use">
       <div class="card"><h2>Tell your agent</h2>
         <div class="row"><select id="asWho"></select><input class="q" id="ask" placeholder="paste a card text or ask a question"><button class="btn" id="go">Send</button></div>
-        <div class="chips" id="useChips" style="margin-top:8px"></div></div>
+        <div class="chips" id="useChips" style="margin-top:8px"></div>
+        <div class="voice" id="useVoice"><button class="mic" data-target="use">Hold to talk</button></div></div>
       <div class="card" id="trace"><h2>What the agent did inside the app</h2><p class="muted">Nothing yet.</p></div>
     </div>
 
@@ -84,7 +95,8 @@
     <div class="pane" id="look">
       <div class="card"><h2>Change how the app looks, by talking</h2>
         <div class="row"><select id="lookWho"></select><input class="q" id="lookQ" placeholder="e.g. 이번 달 외식 카드를 맨 앞으로"><button class="btn" id="lookGo">Edit</button></div>
-        <div class="chips" id="lookChips" style="margin-top:8px"></div></div>
+        <div class="chips" id="lookChips" style="margin-top:8px"></div>
+        <div class="voice" id="lookVoice"><button class="mic" data-target="look">Hold to talk</button></div></div>
       <div class="card" id="lookTrace"><h2>Checks</h2><p class="muted">Every change is applied only if the target changed as asked, nothing else changed, and the app's own buttons still work.</p></div>
     </div>
   </div>
@@ -93,7 +105,12 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 const PRICE = { in: 1.25e-6, out: 4.25e-6 };
-const S = { spec: null, appId: null, members: [], proposal: null };
+const S = { spec: null, appId: null, members: [], proposal: null, tokens: 0, steps: 0 };
+function spend(u) {
+  if (!u) return;
+  S.tokens += (u.input || 0) + (u.output || 0); S.steps += 1;
+  $('#mTok').textContent = S.tokens.toLocaleString(); $('#mSteps').textContent = S.steps;
+}
 
 document.querySelectorAll('.tab').forEach((t) => t.onclick = () => showPane(t.dataset.pane));
 function showPane(id) {
@@ -129,7 +146,7 @@ $('#find').onclick = async () => {
   const r = await api('/api/propose', { history: $('#history').value });
   $('#find').disabled = false;
   if (!r.spec) { $('#findMeta').innerHTML = `<span class="bad">${esc(r.message || 'no proposal')}</span>`; return; }
-  S.proposal = r.spec;
+  S.proposal = r.spec; spend(r.usage);
   $('#findMeta').textContent = usageLine(r.usage, r.ms);
   const f = r.spec.entity.fields.map((x) => `<span class="tag">${esc(x.label)} <span class="num">${x.type}</span></span>`).join('');
   const cards = r.spec.summaries.map((x) => `<span class="tag">${esc(x.label)}</span>`).join('');
@@ -145,7 +162,7 @@ $('#build').onclick = async () => {
   memberSelects(); mountPhone($('#phoneA'), $('#whoA'), S.members[0]);
   const st = await api(`/api/apps/${S.appId}/state`, null, r.ownerToken);
   $('#buildMeta').textContent = `Built by the fixed renderer. ${st.total.toLocaleString()} past card payments imported.`;
-  setupUseChips(); setupLookChips(); pollLog();
+  setupUseChips(); setupLookChips(); setupVoice(); pollLog(); watchIcon();
 };
 
 // 2 Use
@@ -155,21 +172,25 @@ async function setupUseChips() {
   $('#useChips').innerHTML = [...texts, ...qs].map((t) => `<button class="chip">${esc(t)}</button>`).join('');
   $('#useChips').querySelectorAll('.chip').forEach((c) => c.onclick = () => { $('#ask').value = c.textContent; send(); });
 }
-async function send() {
+async function send(heard, heardBlock = '') {
   const sel = $('#asWho').value;
-  if (sel.startsWith('mcp:')) return sendMcp(S.members[Number(sel.slice(4))]);
-  const m = S.members[Number(sel)]; const msg = $('#ask').value.trim(); if (!m || !msg) return;
-  $('#go').disabled = true; $('#trace').innerHTML = '<h2>What the agent did inside the app</h2><p class="muted">Working…</p>';
-  const r = await api(`/api/apps/${S.appId}/assist`, { message: msg }, m.token);
-  $('#go').disabled = false;
+  if (!heard && sel.startsWith('mcp:')) return sendMcp(S.members[Number(sel.slice(4))]);
+  const m = S.members[Number(sel.startsWith('mcp:') ? sel.slice(4) : sel)]; const msg = $('#ask').value.trim(); if (!m || !msg) return;
+  $('#go').disabled = true; $('#trace').innerHTML = `<h2>What the agent did inside the app</h2>${heardBlock}<p class="muted">Working…</p>`;
+  const r = await api(`/api/apps/${S.appId}/assist`, { message: msg, heard: heard || [] }, m.token);
+  $('#go').disabled = false; spend(r.usage);
   const ops = r.steps.filter((s) => s.type === 'op').map((s) => `<div class="call">${esc(s.name)}(${esc(JSON.stringify(s.args))})\n→ ${s.ok ? '<span class="ok">ok</span>' : '<span class="bad">refused</span>'} ${esc(typeof s.result === 'string' ? s.result : JSON.stringify(s.result))}</div>`).join('');
-  $('#trace').innerHTML = `<h2>What ${esc(m.name)}'s agent did inside the app</h2><p class="msg">${esc(r.message)}</p>${ops || '<p class="muted">No app operation.</p>'}<p class="muted">${usageLine(r.usage, r.ms)}. No screenshots, no page reading.</p>`;
+  $('#trace').innerHTML = `<h2>What ${esc(m.name)}'s agent did inside the app</h2>${heardBlock}<p class="msg">${esc(r.message)}</p>${ops || '<p class="muted">No app operation.</p>'}${r.pending ? `<div class="row" id="pendingRow" style="margin:6px 0"><button class="btn" id="pendingSave">Save ${esc(Object.values(r.pending).filter((x) => typeof x === 'string' && !/^\d{4}-/.test(x)).slice(0, 1).join(''))} ${esc(Object.values(r.pending).find((x) => typeof x === 'number') != null ? Number(Object.values(r.pending).find((x) => typeof x === 'number')).toLocaleString() + '원' : '')}</button><button class="btn ghost" id="pendingCancel">Cancel</button><span class="muted">Held because the two hearings disagreed on the amount. One tap, 0 tokens.</span></div>` : ''}<p class="muted">${usageLine(r.usage, r.ms)}. No screenshots, no page reading.</p>`;
+  if (r.pending) {
+    $('#pendingSave').onclick = async () => { const x = await api(`/api/apps/${S.appId}/add`, { values: r.pending }, m.token); $('#pendingRow').innerHTML = x.ok ? '<span class="ok">Saved with the app\'s own button, 0 tokens.</span>' : `<span class="bad">${esc(x.error)}</span>`; };
+    $('#pendingCancel').onclick = () => { $('#pendingRow').innerHTML = '<span class="muted">Not saved.</span>'; };
+  }
 }
 async function sendMcp(m) {
   const msg = $('#ask').value.trim(); if (!m || !msg) return;
   $('#go').disabled = true; $('#trace').innerHTML = `<h2>${esc(m.name)}'s own agent, connected over MCP</h2><p class="muted">Connecting…</p>`;
   const r = await api('/api/demo/mcp-agent', { appId: S.appId, message: msg }, m.token);
-  $('#go').disabled = false;
+  $('#go').disabled = false; spend(r.usage);
   const wire = (r.wire || []).map((w) => {
     const res = w.result || {};
     const bad = res.ok === false;
@@ -178,7 +199,7 @@ async function sendMcp(m) {
   }).join('');
   $('#trace').innerHTML = `<h2>${esc(m.name)}'s own agent, connected over MCP</h2><p class="msg">${esc(r.message)}</p>${wire}<p class="muted">JSON-RPC to POST /mcp/${esc(S.appId)} with ${esc(m.name)}'s token. Same operations and role checks as the app's buttons. ${(r.ms / 1000).toFixed(1)}s, ${(r.usage.input + r.usage.output).toLocaleString()} tokens.</p>`;
 }
-$('#go').onclick = send; $('#ask').onkeydown = (e) => { if (e.key === 'Enter') send(); };
+$('#go').onclick = () => send(); $('#ask').onkeydown = (e) => { if (e.key === 'Enter') send(); };
 
 // 3 Together
 $('#invite').onclick = async () => {
@@ -187,7 +208,7 @@ $('#invite').onclick = async () => {
   if (!r.ok) return;
   const mem = { name: r.name, role: r.role, token: r.token };
   S.members.push(mem); memberSelects(); mountPhone($('#phoneB'), $('#whoB'), mem);
-  $('#inviteMeta').innerHTML = `${esc(r.name)} joined as <b>member</b>. Her own agent can work here too: the app exposes the same operations over MCP at <span class="num">POST ${esc(r.mcp)}</span> with her token, so a Muse custom connector or Muse Code can act for her with exactly her role.`;
+  $('#inviteMeta').innerHTML = `${esc(r.name)} joined as <b>member</b>. Her own agent can work here too: the app exposes the same operations over MCP at <span class="num">POST ${esc(r.mcp)}</span> with her token, so any MCP client she uses can act for her with exactly her role.`;
 };
 let logTimer = null;
 function pollLog() {
@@ -195,7 +216,8 @@ function pollLog() {
   logTimer = setInterval(async () => {
     const owner = S.members[0]; if (!owner) return;
     const st = await api(`/api/apps/${S.appId}/state`, null, owner.token);
-    const via = { agent: 'via agent', mcp: 'via external agent (MCP)', app: 'in the app', import: 'import' };
+    $('#mTaps').textContent = st.taps || 0;
+    const via = { agent: 'via agent', voice: 'by voice', mcp: 'via external agent (MCP)', app: 'with the app\'s buttons, 0 tokens', import: 'import' };
     const what = (l) => l.action === 'refused' ? `<span class="bad">refused</span> <span class="num">${esc(l.values && l.values.tried)}</span>` : `${esc(l.action)} <span class="num">${esc(l.values ? Object.values(l.values).join(' ') : '')}</span>`;
     $('#log').innerHTML = st.log.slice().reverse().map((l) => `<div><b>${esc(l.who)}</b> ${what(l)} <span class="muted">${esc(via[l.via] || l.via || '')}</span></div>`).join('');
   }, 1500);
@@ -220,15 +242,15 @@ async function inspect(html) {
   const s = []; for (const t of f.contentWindow.__smoke || []) { let ok = false; try { ok = Boolean(await t.run()); } catch (e) {} s.push({ name: t.name, ok }); }
   f.remove(); return { m, s };
 }
-async function lookEdit() {
+async function lookEdit(heardBlock = '') {
   const m = S.members[Number($('#lookWho').value)]; const q = $('#lookQ').value.trim(); if (!m || !q) return;
-  $('#lookGo').disabled = true; $('#lookTrace').innerHTML = '<h2>Checks</h2><p class="muted">Working…</p>';
+  $('#lookGo').disabled = true; $('#lookTrace').innerHTML = `<h2>Checks</h2>${heardBlock}<p class="muted">Working…</p>`;
   const owner = S.members[0];
   const cur = (await api(`/api/apps/${S.appId}/html`, null, owner.token)).html;
   const before = await inspect(cur);
   const r = await api(`/api/apps/${S.appId}/edit`, { request: q, computed: before.m }, m.token);
-  $('#lookGo').disabled = false;
-  if (r.status === 'refused' && !r.steps) { $('#lookTrace').innerHTML = `<h2>Checks</h2><p class="msg bad">${esc(r.message)}</p><p class="muted">Role check happens before any model call.</p>`; return; }
+  $('#lookGo').disabled = false; spend(r.usage);
+  if (r.status === 'refused' && !r.steps) { $('#lookTrace').innerHTML = `<h2>Checks</h2>${heardBlock}<p class="msg bad">${esc(r.message)}</p><p class="muted">Role check happens before any model call.</p>`; return; }
   const steps = (r.steps || []).map((s) => s.type === 'verify' ? `<div class="muted" style="margin-top:6px">Deterministic check: ${esc(s.name)}</div>` + s.checks.map((c) => `<div class="chk"><span class="${c.ok ? 'ok' : 'bad'}">${c.ok ? '✓' : '✗'}</span>${esc(c.label)} <span class="num">${esc(c.detail)}</span></div>`).join('')
     : s.type === 'review' ? `<div class="chk" style="margin-top:6px"><span class="${s.satisfied ? 'ok' : 'bad'}">${s.satisfied ? '✓' : '✗'}</span>Reviewer (Muse Spark Open): ${esc(s.reason)}</div>`
     : s.type === 'model' && s.calls.length ? `<div class="call">${s.calls.map((c) => esc(c.name + JSON.stringify(c.args))).join('\n')}</div>` : '').join('');
@@ -247,9 +269,82 @@ async function lookEdit() {
   } else if (r.status !== 'done') {
     tail = `<p class="msg">${esc(r.message)}</p>`;
   }
-  $('#lookTrace').innerHTML = `<h2>Checks</h2>${steps}${tail}`;
+  $('#lookTrace').innerHTML = `<h2>Checks</h2>${heardBlock}${steps}${tail}${r.usage ? `<p class="muted">${usageLine(r.usage, r.ms || 0)}</p>` : ''}`;
 }
-$('#lookGo').onclick = lookEdit;
+$('#lookGo').onclick = () => lookEdit();
+
+// Voice: Muse Voice Transcribe, with this app's own words as keywords
+const SAMPLES = {
+  use: [['add_mart', '방금 동네마트에서 이만 이천오백 원 썼어. 식비로 넣어줘.'], ['add_hwaro', '고깃집 화로에서 팔만 칠천 원, 외식으로 넣어줘.'], ['add_taxi', '카카오T 만 이천삼백 원, 교통으로 넣어줘.'], ['ask_eat', '지난달 외식비 얼마야?']],
+  look: [['look_green', '추가 버튼 색을 초록색으로 바꿔줘.']],
+};
+function setupVoice() {
+  for (const target of ['use', 'look']) {
+    const box = $(target === 'use' ? '#useVoice' : '#lookVoice');
+    box.querySelectorAll('.say').forEach((x) => x.remove());
+    for (const [file, text] of SAMPLES[target]) {
+      const b = document.createElement('button'); b.className = 'say'; b.textContent = 'Say: ' + text; b.dataset.file = file;
+      b.onclick = async () => { const url = `/voice/${file}.wav`; new Audio(url).play().catch(() => {}); const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer()); voice(bytes, target); };
+      box.append(b);
+    }
+  }
+}
+function b64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+async function toWav16k(blob) {
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  const buf = await ctx.decodeAudioData(await blob.arrayBuffer()); ctx.close();
+  const pcm = buf.getChannelData(0); const out = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); out.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true);
+  out.setUint32(24, 16000, true); out.setUint32(28, 32000, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true); w(36, 'data'); out.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+  return new Uint8Array(out.buffer);
+}
+let rec = null;
+document.querySelectorAll('.mic').forEach((b) => {
+  b.onpointerdown = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chunks = []; rec = new MediaRecorder(stream); rec.ondataavailable = (e) => chunks.push(e.data);
+      rec.onstop = async () => { stream.getTracks().forEach((t) => t.stop()); b.classList.remove('rec'); b.textContent = 'Hold to talk'; voice(await toWav16k(new Blob(chunks)), b.dataset.target); };
+      rec.start(); b.classList.add('rec'); b.textContent = 'Listening… release to send';
+      setTimeout(() => { if (rec && rec.state === 'recording') rec.stop(); }, 15000);
+    } catch (e) { b.textContent = 'Microphone not available'; }
+  };
+  b.onpointerup = b.onpointerleave = () => { if (rec && rec.state === 'recording') rec.stop(); };
+});
+function heardHtml(v) {
+  const diff = v.withoutAppWords && v.withoutAppWords !== v.transcript;
+  return `<div class="heard"><div class="muted">Heard by Muse Voice Transcribe in ${(v.ms / 1000).toFixed(1)}s, with ${v.keywordCount} words this app already knows</div><p class="msg">"${esc(v.transcript)}"</p>${diff ? `<div class="muted">Without the app's words it heard: "${esc(v.withoutAppWords)}"</div>` : ''}</div>`;
+}
+async function voice(bytes, target) {
+  const sel = target === 'use' ? $('#asWho').value : $('#lookWho').value;
+  const m = S.members[Number(String(sel).replace('mcp:', ''))]; if (!m) return;
+  const box = target === 'use' ? $('#trace') : $('#lookTrace');
+  box.innerHTML = `<h2>${target === 'use' ? 'What the agent did inside the app' : 'Checks'}</h2><p class="muted">Listening…</p>`;
+  const v = await api(`/api/apps/${S.appId}/voice`, { audio: b64(bytes) }, m.token);
+  if (!v.ok) { box.innerHTML += `<p class="bad">${esc(v.error)}</p>`; return; }
+  const block = heardHtml(v);
+  if (target === 'use') { $('#ask').value = v.transcript; send([v.transcript, v.withoutAppWords].filter(Boolean), block); }
+  else { $('#lookQ').value = v.transcript; lookEdit(block); }
+}
+
+// Icon: Muse Image draws it in the background after the app is built
+function watchIcon() {
+  const owner = S.members[0]; let n = 0;
+  const t = setInterval(async () => {
+    const st = await api(`/api/apps/${S.appId}/state`, null, owner.token);
+    const ic = st.icon || {};
+    if (ic.status === 'ready' || ic.status === 'failed' || ++n > 40) {
+      clearInterval(t);
+      const el = document.createElement('div'); el.className = 'icon';
+      el.innerHTML = ic.status === 'ready'
+        ? `<img src="/a/${S.appId}/icon?t=${encodeURIComponent(owner.token)}" alt=""><span class="muted">Icon drawn by Muse Image in ${(ic.ms / 1000).toFixed(1)}s, flat and in the app's own colour.</span>`
+        : `<span class="muted">No icon: ${esc(ic.error || 'still drawing')}</span>`;
+      $('#proposal').append(el);
+    }
+  }, 2000);
+}
 </script>
 </body>
 </html>

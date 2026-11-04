@@ -8,6 +8,7 @@
 import { respond, toolResultItems } from '../meta.js';
 import { SPEC_SCHEMA, validateSpec } from './spec.js';
 import { addEntry, updateEntry, query, can, localDate } from './ops.js';
+import { koNumbers } from './numbers.js';
 
 function usageOf(total, raw) {
   const u = raw && raw.usage;
@@ -113,7 +114,22 @@ function describeApp(app) {
   return `App "${app.spec.title}". Each record is a ${app.spec.entity.name} with fields: ${f}.`;
 }
 
-export async function assist({ app, member, message, today = localDate() }) {
+/** Refuse an amount the person never said or pasted. Deterministic, before the write. */
+function amountCheck(app, values, allowed) {
+  const money = app.spec.entity.fields.filter((f) => f.type === 'money' || f.type === 'number').map((f) => f.key);
+  for (const k of money) {
+    if (values && values[k] != null && values[k] !== '') {
+      const n = Number(String(values[k]).replace(/[^0-9.-]/g, ''));
+      if (!allowed.has(n)) {
+        const heard = [...allowed].filter((x) => x >= 100).slice(0, 6);
+        return `amount ${n} is not in what the person said or pasted${heard.length ? `; amounts there: ${heard.join(', ')}` : ''}. Use one of those, or ask.`;
+      }
+    }
+  }
+  return null;
+}
+
+export async function assist({ app, member, message, heard = [], today = localDate() }) {
   const usage = { input: 0, output: 0, cached: 0 };
   const steps = [];
   const started = Date.now();
@@ -128,7 +144,24 @@ Rules:
 - If an operation is refused, say so plainly. Do not try a workaround.
 - Reply in one or two short sentences in the user's language.`;
 
-  let input = [{ role: 'user', content: [{ type: 'input_text', text: message }] }];
+  const spoken = heard.filter(Boolean);
+  const amounts = (t) => [...koNumbers(t)].filter((n) => n >= 100).sort((x, y) => x - y);
+  let text = message;
+  let hold = false;
+  let pending = null;
+  if (spoken.length > 1) {
+    const a1 = amounts(spoken[0]);
+    const a2 = amounts(spoken[1]);
+    const agree = a1.join() === a2.join();
+    text = `Spoken request, heard two ways from one recording:
+1. With this app's own words (names and categories are reliable; it may repeat a phrase): ${spoken[0]}
+2. Plain: ${spoken[1]}
+Amounts read by code: hearing 1 ${a1.join(', ') || 'none'}, hearing 2 ${a2.join(', ') || 'none'}.
+${agree ? 'The amounts agree. Treat it as one request.' : "The amounts disagree. Still call add_record now, with hearing 1's amount; do not ask first. The app holds that record until the person confirms it with one tap, so do not say it was saved. After the call, reply with one short question such as \"12,300원으로 넣을까요?\""}`;
+    hold = !agree;
+  }
+  const allowed = koNumbers([message, ...spoken].join('\n'));
+  let input = [{ role: 'user', content: [{ type: 'input_text', text }] }];
   let previousResponseId;
   for (let turn = 1; turn <= 5; turn++) {
     const t0 = Date.now();
@@ -136,12 +169,15 @@ Rules:
     usageOf(usage, res.raw);
     previousResponseId = res.id;
     steps.push({ type: 'model', turn, ms: Date.now() - t0, text: res.text, calls: res.toolCalls.map((c) => ({ name: c.name, args: c.args })) });
-    if (!res.toolCalls.length) return { ok: true, message: res.text, steps, usage, ms: Date.now() - started };
+    if (!res.toolCalls.length) return { ok: true, message: res.text, steps, usage, ms: Date.now() - started, ...(pending ? { pending } : {}) };
     const results = res.toolCalls.map((call) => {
       const a = call.args || {};
       let r;
-      if (call.name === 'add_record') r = addEntry(app, member, a.values, 'agent');
-      else if (call.name === 'update_record') r = updateEntry(app, member, a.id, a.values, 'agent');
+      const wrongAmount = (call.name === 'add_record' || call.name === 'update_record') ? amountCheck(app, a.values, allowed) : null;
+      if (wrongAmount) r = { ok: false, error: wrongAmount, check: 'amount' };
+      else if (call.name === 'add_record' && hold) { pending = a.values; r = { ok: true, held: true, note: 'held until the person taps Save' }; }
+      else if (call.name === 'add_record') r = addEntry(app, member, a.values, spoken.length ? 'voice' : 'agent');
+      else if (call.name === 'update_record') r = updateEntry(app, member, a.id, a.values, spoken.length ? 'voice' : 'agent');
       else if (call.name === 'query_records') r = query(app, member, a);
       else r = { ok: false, error: `${call.name} is not available` };
       steps.push({ type: 'op', name: call.name, args: a, ok: r.ok, result: r.ok ? summarize(r) : r.error });
@@ -153,6 +189,7 @@ Rules:
 }
 
 function summarize(r) {
+  if (r.held) return { held: true };
   if (r.record) return { id: r.record.id };
   if (r.groups) return { groups: r.groups.slice(0, 6), matched: r.matched };
   if (r.records) return { matched: r.matched, shown: r.records.length };

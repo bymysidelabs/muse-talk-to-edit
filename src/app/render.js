@@ -7,13 +7,19 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 
 const ACCENTS = ['#2f6b4f', '#2b4fd8', '#8a4b2a', '#6a3fb5', '#b03a5b', '#1f6f8b'];
 
+/** The app's colour, picked from its title so the same app always looks the same. */
+export function accentFor(spec) {
+  return ACCENTS[[...spec.title].reduce((s, c) => s + c.codePointAt(0), 0) % ACCENTS.length];
+}
+
 export function renderShell(spec) {
   let n = 0;
   const id = () => `data-bve-id="${++n}"`;
-  const accent = ACCENTS[[...spec.title].reduce((s, c) => s + c.codePointAt(0), 0) % ACCENTS.length];
+  const accent = accentFor(spec);
   const fields = spec.entity.fields;
 
   const header = `<header ${id()}>
+    <img class="appicon" data-role="icon" alt="" ${id()}>
     <h1 ${id()}>${esc(spec.title)}</h1>
     <p class="sub" ${id()}>${esc(spec.subtitle || '')}</p>
   </header>`;
@@ -58,7 +64,10 @@ export function renderShell(spec) {
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f5f4f0; color: #1b1c1f; }
   .app { max-width: 390px; margin: 0 auto; min-height: 100vh; background: #fdfcf9; padding-bottom: 24px; }
-  header { padding: 22px 18px 8px; }
+  header { padding: 22px 18px 8px; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; }
+  header > :not(.appicon) { grid-column: 2; }
+  .appicon { display: none; grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+  .appicon.ready { display: block; }
   h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
   .sub { margin: 4px 0 0; color: #6b6f78; font-size: 13px; }
   .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 14px 4px; }
@@ -78,7 +87,7 @@ export function renderShell(spec) {
   .list .side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
   .list .m { font-size: 12px; color: #6b6f78; }
   .list .amt { font-weight: 700; white-space: nowrap; }
-  .list .tog { border: 1px solid #e3e0d8; background: #fff; border-radius: 999px; padding: 4px 9px; font-size: 12px; }
+  .list .tog { border: 1px dashed #dcd8cf; background: transparent; color: #9a9ea6; border-radius: 999px; padding: 3px 8px; font-size: 11.5px; }
   .list .tog.on { background: #1b1c1f; color: #fff; border-color: #1b1c1f; }
   .list .who { font-size: 11px; color: #8a8f99; }
   .activity { margin: 10px 16px 0; font-size: 12px; color: #6b6f78; min-height: 16px; }
@@ -226,6 +235,16 @@ const RUNTIME = String.raw`
   });
 
   document.querySelectorAll('input[type="date"][data-field]').forEach((el) => { el.value = today(); });
+
+  // The icon is drawn by Muse Image after the app is built, so keep asking for a while.
+  const icon = $('[data-role="icon"]');
+  if (icon && !offline) {
+    let tries = 0;
+    const load = () => { icon.src = '/a/' + cfg.appId + '/icon?t=' + encodeURIComponent(cfg.token) + '&n=' + tries; };
+    icon.onload = () => icon.classList.add('ready');
+    icon.onerror = () => { if (++tries < 40) setTimeout(load, 2000); };
+    load();
+  }
 
   // Behaviour checks for the verified editor. They switch the runtime to a
   // local copy first, so checking never writes to the real records.
