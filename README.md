@@ -82,10 +82,11 @@ Not used yet: SAM 3.1. The natural place for it is a shop's menu app, cutting ea
 
 ```bash
 cp .env.example .env        # add META_API_KEY, and REVIEW_API_KEY for the reviewer
-node src/server.js          # http://localhost:8787/studio
+scripts/fetch_muse_assets.sh # Muse avatar clips and icons for the demo, fetched from muse.ai
+node src/server.js          # http://localhost:8787/muse
 ```
 
-No dependencies. Node 18 or newer. `/studio` is the demo (two phones and four steps). `/` is the original single-app editor demo. Voice sample clips for the studio are made with `scripts/make_voice_samples.sh` (macOS `say` and ffmpeg); the hold-to-talk button uses the microphone.
+No dependencies. Node 18 or newer. `/muse` is the demo shown in the video: two Muse phones with the app as an artifact, and a ledger of what ran and which model or code check handled it. The Muse screens are a mock-up, since Muse is not available in Korea; the app, its tools and every number are live. Meta's avatar clips and icons are not in this repository; `scripts/fetch_muse_assets.sh` downloads them into `public/muse-assets/`. `/studio` is the earlier version of the demo, and `/` is the original single-app editor demo. Voice sample clips are made with `scripts/make_voice_samples.sh` (macOS `say` and ffmpeg); the hold-to-talk button uses the microphone.
 
 Reproduce the numbers:
 
@@ -110,7 +111,8 @@ node scripts/mcp_agent.mjs http://127.0.0.1:8787/mcp/<appId> <token> "지난달 
 - `src/app/routes.js` - HTTP routes for apps, members, voice, icons and look changes
 - `src/tools.js`, `src/verify.js`, `src/review.js`, `src/agent.js` - the verified talk-to-edit editor
 - `src/demo/` - synthetic household data and the outside MCP agent
-- `public/studio.html` - the demo
+- `public/muse.html` - the demo inside a Muse mock-up
+- `public/studio.html` - the earlier demo
 - `scripts/` - benchmarks and the reliability gate
 
 ## Limits
