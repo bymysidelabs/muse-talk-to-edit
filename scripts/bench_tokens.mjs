@@ -53,7 +53,8 @@ async function editCode(html, q) {
 async function editOurs(html, q, computed) {
   const t0 = Date.now();
   const r = await editOnce({ html, request: q, computed });
-  return { ms: Date.now() - t0, tokens: { input: r.usage.input, output: r.usage.output }, status: r.status };
+  const rv = (r.steps || []).filter((s) => s.type === 'review' && s.usage).reduce((n, s) => n + s.usage.input + s.usage.output, 0);
+  return { ms: Date.now() - t0, tokens: { input: r.usage.input, output: r.usage.output }, status: r.status, reviewTokens: rv };
 }
 
 async function buildCode() {
@@ -73,13 +74,14 @@ async function buildOurs() {
 }
 
 const jobs = [];
+const ONLY = process.env.ONLY || '';
 for (const e of EDITS) {
   const html = e.app === 'cafe' ? cafe : ledger;
   const computed = e.app === 'cafe' ? cafeComputed : {};
-  jobs.push({ kind: 'edit', way: 'code', ...e, run: () => editCode(html, e.q) });
+  if (ONLY !== 'ours') jobs.push({ kind: 'edit', way: 'code', ...e, run: () => editCode(html, e.q) });
   jobs.push({ kind: 'edit', way: 'ours', ...e, run: () => editOurs(html, e.q, computed) });
 }
-for (let i = 1; i <= 2; i++) {
+for (let i = 1; i <= (ONLY ? 0 : 2); i++) {
   jobs.push({ kind: 'build', way: 'code', q: `build ${i}`, run: buildCode });
   jobs.push({ kind: 'build', way: 'ours', q: `build ${i}`, run: buildOurs });
 }
@@ -93,7 +95,7 @@ async function worker() {
       const r = await j.run();
       const total = r.tokens.input + r.tokens.output;
       results.push({ kind: j.kind, way: j.way, app: j.app, q: j.q, ...r, total, costUsd: Number(cost(r.tokens).toFixed(5)) });
-      console.log(`${j.kind} ${j.way.padEnd(4)} ${String(j.app || '').padEnd(6)} ${total} tok (in ${r.tokens.input} / out ${r.tokens.output}) ${(r.ms / 1000).toFixed(1)}s ${r.keptAll === false ? 'LOST ELEMENTS ' : ''}${r.status || ''} | ${j.q}`);
+      console.log(`${j.kind} ${j.way.padEnd(4)} ${String(j.app || '').padEnd(6)} ${total} tok (in ${r.tokens.input} / out ${r.tokens.output}) ${(r.ms / 1000).toFixed(1)}s ${r.keptAll === false ? 'LOST ELEMENTS ' : ''}${r.status || ''}${r.reviewTokens ? ` reviewer ${r.reviewTokens} tok` : ''} | ${j.q}`);
     } catch (e) {
       results.push({ kind: j.kind, way: j.way, q: j.q, error: String(e.message || e) });
       console.log(`ERR ${j.kind} ${j.way} ${j.q}: ${e.message}`);
@@ -121,4 +123,4 @@ const summary = {
   when: new Date().toISOString(),
 };
 console.log('\nSUMMARY', JSON.stringify(summary));
-await writeFile(new URL('../results/tokens.json', import.meta.url), JSON.stringify({ summary, results }, null, 2));
+await writeFile(new URL(`../results/tokens${ONLY ? '-' + ONLY : ''}.json`, import.meta.url), JSON.stringify({ summary, results }, null, 2));

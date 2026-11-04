@@ -1,0 +1,149 @@
+{
+  "summary": {
+    "edit": {
+      "code": {
+        "n": 0,
+        "avgTokens": 0,
+        "avgOutput": 0,
+        "medianSeconds": null,
+        "costUsd": 0,
+        "lostElements": 0
+      },
+      "ours": {
+        "n": 7,
+        "avgTokens": 4064,
+        "avgOutput": 383,
+        "medianSeconds": 13.979,
+        "costUsd": 0.0436
+      }
+    },
+    "build": {
+      "code": {
+        "n": 0,
+        "avgTokens": 0,
+        "avgOutput": 0,
+        "medianSeconds": null,
+        "costUsd": 0
+      },
+      "ours": {
+        "n": 0,
+        "avgTokens": 0,
+        "avgOutput": 0,
+        "medianSeconds": null,
+        "costUsd": 0
+      }
+    },
+    "appBytes": {
+      "cafe": 4825,
+      "ledger": 14419
+    },
+    "when": "2026-11-04T03:15:47.143Z"
+  },
+  "results": [
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "cafe",
+      "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
+      "ms": 12250,
+      "tokens": {
+        "input": 4102,
+        "output": 192
+      },
+      "status": "done",
+      "reviewTokens": 560,
+      "total": 4294,
+      "costUsd": 0.00594
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "cafe",
+      "q": "카페라떼를 메뉴 맨 위로 올려줘",
+      "ms": 13979,
+      "tokens": {
+        "input": 4065,
+        "output": 174
+      },
+      "status": "done",
+      "reviewTokens": 1016,
+      "total": 4239,
+      "costUsd": 0.00582
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "cafe",
+      "q": "주문하기 버튼을 더 크게 해줘",
+      "ms": 14858,
+      "tokens": {
+        "input": 4052,
+        "output": 282
+      },
+      "status": "done",
+      "reviewTokens": 510,
+      "total": 4334,
+      "costUsd": 0.00626
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "cafe",
+      "q": "주문하기 버튼 색을 초록색으로 바꿔줘",
+      "ms": 17754,
+      "tokens": {
+        "input": 4076,
+        "output": 337
+      },
+      "status": "done",
+      "reviewTokens": 490,
+      "total": 4413,
+      "costUsd": 0.00653
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "ledger",
+      "q": "추가 버튼 색을 초록색으로 바꿔줘",
+      "ms": 12183,
+      "tokens": {
+        "input": 3160,
+        "output": 398
+      },
+      "status": "done",
+      "reviewTokens": 509,
+      "total": 3558,
+      "costUsd": 0.00564
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "ledger",
+      "q": "앱 제목을 \"우리 가족 가계부\"로 바꿔줘",
+      "ms": 11522,
+      "tokens": {
+        "input": 3162,
+        "output": 173
+      },
+      "status": "done",
+      "reviewTokens": 507,
+      "total": 3335,
+      "costUsd": 0.00469
+    },
+    {
+      "kind": "edit",
+      "way": "ours",
+      "app": "ledger",
+      "q": "이번 달 외식 카드 글씨를 더 크게 해줘",
+      "ms": 19645,
+      "tokens": {
+        "input": 3148,
+        "output": 1126
+      },
+      "status": "done",
+      "reviewTokens": 770,
+      "total": 4274,
+      "costUsd": 0.00872
+    }
+  ]
+}

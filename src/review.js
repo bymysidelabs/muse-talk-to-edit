@@ -52,10 +52,11 @@ export async function review({ request, applied, verifications }) {
     return { satisfied: null, reason: `reviewer error ${res.status}: ${t.slice(0, 160)}`, model: MODEL, ms };
   }
   const json = await res.json();
+  const usage = { input: (json.usage && json.usage.prompt_tokens) || 0, output: (json.usage && json.usage.completion_tokens) || 0 };
   const msg = json.choices && json.choices[0] && json.choices[0].message;
   const parsed = extractJson(msg && msg.content);
   if (!parsed || typeof parsed.satisfied !== 'boolean') {
-    return { satisfied: null, reason: 'reviewer gave no verdict', model: MODEL, ms };
+    return { satisfied: null, reason: 'reviewer gave no verdict', model: MODEL, ms, usage };
   }
-  return { satisfied: parsed.satisfied, reason: String(parsed.reason || ''), model: MODEL, ms };
+  return { satisfied: parsed.satisfied, reason: String(parsed.reason || ''), model: MODEL, ms, usage };
 }
