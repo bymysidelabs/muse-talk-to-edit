@@ -86,11 +86,17 @@ export async function editOnce({ html, request, computed = {} }) {
         if (failures >= MAX_FAILURES) {
           return finish('needs_confirmation', `The reviewer is still not satisfied: ${reviewResult.reason}`);
         }
+        // Roll back what the reviewer rejected, so the retry starts from the
+        // original app and a rejected change never stays behind.
+        log({ type: 'rollback', undone: applied.map((x) => ({ name: x.name, args: x.args })) });
+        current = html;
+        applied.length = 0;
+        verifications.length = 0;
         input = [{
           role: 'user',
           content: [{
             type: 'input_text',
-            text: `An independent reviewer rejected the result: ${reviewResult.reason}\nCurrent elements:\n${describeElements(current, computed)}\nFix it with one tool call, or say that you cannot.`,
+            text: `An independent reviewer rejected the result: ${reviewResult.reason}\nThat change was rolled back, so the app is as it was at the start.\nCurrent elements:\n${describeElements(current, computed)}\nTry again with one tool call, or say that you cannot.`,
           }],
         }];
         continue;

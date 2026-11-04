@@ -38,7 +38,7 @@ Reading the raw texts costs more as the history grows. Asking the app stays flat
 
 Rewriting the file costs more as the app grows, and output tokens cost 3.4 times as much as input tokens. One tool call per change stays about the same size. On a very small app the rewrite uses fewer tokens. Building the app is a one-time cost and is not where the savings are. Every change here is also reviewed by Muse Spark Open on Baseten, which adds about 620 tokens per change. That reviewer is not counted in the Muse token figures above. The checks make a change about 2.5 seconds slower (median 13.2 s against 10.7 s).
 
-**Editor reliability gate** (`scripts/gate.mjs`, 10 requests × 2 runs on the café app): 20/20 correct, 0 silent wrong edits, median 10.5 s, $0.11 for all 20.
+**Editor reliability gate** (`scripts/gate.mjs`, 10 requests × 4 runs on the café app): 40/40 correct, 0 silent wrong edits, median 9.4 s, $0.22 for all 40. An earlier run found 2 wrong in 20: when the reviewer rejected a change, that change was left in place and the retry stacked on top of it. Rejected changes are now rolled back before the retry.
 
 ## How it works
 
@@ -91,7 +91,7 @@ Reproduce the numbers:
 
 ```bash
 node --test                                   # unit tests
-node scripts/gate.mjs 2 4                     # editor reliability gate
+node scripts/gate.mjs 4 6                     # editor reliability gate
 node scripts/bench_read.mjs 2 4               # asking the app vs reading 3 months
 BENCH_FROM=2025-11-04 node scripts/bench_read.mjs 2 4   # 12 months
 node scripts/bench_tokens.mjs 4               # change and build, both ways

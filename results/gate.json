@@ -1,40 +1,15 @@
 {
   "summary": {
-    "runs": 20,
-    "correct": 20,
+    "runs": 40,
+    "correct": 40,
     "silentWrongEdits": 0,
     "errors": 0,
-    "medianSeconds": 10.489,
-    "p90Seconds": 17.517,
-    "costUsd": 0.1072,
-    "when": "2026-11-04T02:12:58.437Z"
+    "medianSeconds": 9.422,
+    "p90Seconds": 11.881,
+    "costUsd": 0.2163,
+    "when": "2026-11-04T03:45:48.054Z"
   },
   "results": [
-    {
-      "q": "주문하기 버튼을 더 크게 해줘",
-      "expect": "done",
-      "targets": [
-        "22"
-      ],
-      "run": 1,
-      "status": "done",
-      "touched": [
-        "22"
-      ],
-      "tools": [
-        "scale_font"
-      ],
-      "failures": 0,
-      "review": true,
-      "ms": 10017,
-      "tokens": {
-        "input": 4052,
-        "output": 219
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "주문하기 버튼을 더 크게 키웠습니다."
-    },
     {
       "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
       "expect": "done",
@@ -51,64 +26,14 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 14284,
+      "ms": 10237,
       "tokens": {
-        "input": 4104,
-        "output": 191
+        "input": 4103,
+        "output": 193
       },
       "correct": true,
       "silentWrong": false,
       "message": "영업시간을 09:00 - 21:00으로 바꿨어요."
-    },
-    {
-      "q": "바닐라라떼는 당분간 숨겨줘",
-      "expect": "done",
-      "targets": [
-        "15"
-      ],
-      "run": 1,
-      "status": "done",
-      "touched": [
-        "15"
-      ],
-      "tools": [
-        "set_visibility"
-      ],
-      "failures": 0,
-      "review": null,
-      "ms": 15826,
-      "tokens": {
-        "input": 4056,
-        "output": 187
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "바닐라라떼 숨겼어요."
-    },
-    {
-      "q": "카페라떼를 메뉴 맨 위로 올려줘",
-      "expect": "done",
-      "targets": [
-        "10"
-      ],
-      "run": 1,
-      "status": "done",
-      "touched": [
-        "10"
-      ],
-      "tools": [
-        "move_element"
-      ],
-      "failures": 0,
-      "review": null,
-      "ms": 17517,
-      "tokens": {
-        "input": 4065,
-        "output": 188
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "카페라떼를 맨 위로 올렸어요."
     },
     {
       "q": "가게 이름을 \"골목 커피 울산점\"으로 바꿔줘",
@@ -126,52 +51,89 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 10255,
+      "ms": 10994,
       "tokens": {
         "input": 4069,
-        "output": 172
+        "output": 154
       },
       "correct": true,
       "silentWrong": false,
       "message": "가게 이름을 \"골목 커피 울산점\"으로 바꿨어요."
     },
     {
-      "q": "메뉴에 케이크를 추가해줘",
-      "expect": "declined",
-      "targets": [],
+      "q": "카페라떼를 메뉴 맨 위로 올려줘",
+      "expect": "done",
+      "targets": [
+        "10"
+      ],
       "run": 1,
-      "status": "refused",
-      "touched": [],
-      "tools": [],
+      "status": "done",
+      "touched": [
+        "10"
+      ],
+      "tools": [
+        "move_element"
+      ],
       "failures": 0,
-      "review": null,
-      "ms": 2341,
+      "review": true,
+      "ms": 11199,
       "tokens": {
-        "input": 1946,
+        "input": 4065,
+        "output": 198
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카페라떼를 메뉴 맨 위로 올렸어요."
+    },
+    {
+      "q": "주문하기 버튼을 더 크게 해줘",
+      "expect": "done",
+      "targets": [
+        "22"
+      ],
+      "run": 1,
+      "status": "done",
+      "touched": [
+        "22"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 11314,
+      "tokens": {
+        "input": 4052,
+        "output": 205
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "주문하기 버튼을 더 크게 키웠습니다."
+    },
+    {
+      "q": "바닐라라떼는 당분간 숨겨줘",
+      "expect": "done",
+      "targets": [
+        "15"
+      ],
+      "run": 1,
+      "status": "done",
+      "touched": [
+        "15"
+      ],
+      "tools": [
+        "set_visibility"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 11867,
+      "tokens": {
+        "input": 4056,
         "output": 165
       },
       "correct": true,
       "silentWrong": false,
-      "message": "새 메뉴 항목을 추가하는 기능은 지원하지 않아 케이크를 추가할 수 없어요."
-    },
-    {
-      "q": "카드 결제 기능 넣어줘",
-      "expect": "declined",
-      "targets": [],
-      "run": 1,
-      "status": "refused",
-      "touched": [],
-      "tools": [],
-      "failures": 0,
-      "review": null,
-      "ms": 1738,
-      "tokens": {
-        "input": 1943,
-        "output": 151
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "카드 결제 기능은 지금 도구로는 넣어드릴 수 없어요."
+      "message": "바닐라라떼를 숨겼어요."
     },
     {
       "q": "주문하기 버튼 색을 초록색으로 바꿔줘",
@@ -189,39 +151,52 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 10489,
+      "ms": 13536,
       "tokens": {
-        "input": 4075,
-        "output": 228
+        "input": 4096,
+        "output": 338
       },
       "correct": true,
       "silentWrong": false,
-      "message": "주문하기 버튼을 초록색으로 바꿨어요."
+      "message": "주문하기 버튼을 초록색으로 바꿨습니다."
     },
     {
-      "q": "영업시간 글씨를 조금 작게 해줘",
-      "expect": "done",
-      "targets": [
-        "3"
-      ],
+      "q": "카드 결제 기능 넣어줘",
+      "expect": "declined",
+      "targets": [],
       "run": 1,
-      "status": "done",
-      "touched": [
-        "3"
-      ],
-      "tools": [
-        "scale_font"
-      ],
+      "status": "refused",
+      "touched": [],
+      "tools": [],
       "failures": 0,
-      "review": true,
-      "ms": 9857,
+      "review": null,
+      "ms": 2448,
       "tokens": {
-        "input": 4067,
-        "output": 193
+        "input": 1943,
+        "output": 167
       },
       "correct": true,
       "silentWrong": false,
-      "message": "영업시간 글씨를 작게 줄였어요."
+      "message": "카드 결제 기능은 새로 추가할 수 없어요."
+    },
+    {
+      "q": "메뉴에 케이크를 추가해줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 1,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2902,
+      "tokens": {
+        "input": 1946,
+        "output": 244
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "새 메뉴 항목을 추가하는 기능은 없어서 케이크를 넣어드릴 수 없어요."
     },
     {
       "q": "아메리카노 가격을 3,800원으로 바꿔줘",
@@ -238,40 +213,15 @@
         "set_text"
       ],
       "failures": 0,
-      "review": null,
-      "ms": 14202,
+      "review": true,
+      "ms": 7915,
       "tokens": {
-        "input": 4067,
-        "output": 167
+        "input": 4071,
+        "output": 171
       },
       "correct": true,
       "silentWrong": false,
       "message": "아메리카노 가격을 3,800원으로 바꿨어요."
-    },
-    {
-      "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
-      "expect": "done",
-      "targets": [
-        "3"
-      ],
-      "run": 2,
-      "status": "done",
-      "touched": [
-        "3"
-      ],
-      "tools": [
-        "set_text"
-      ],
-      "failures": 0,
-      "review": true,
-      "ms": 8699,
-      "tokens": {
-        "input": 4100,
-        "output": 160
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "영업시간을 09:00 - 21:00으로 바꿨어요."
     },
     {
       "q": "주문하기 버튼을 더 크게 해줘",
@@ -289,10 +239,10 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 14573,
+      "ms": 10102,
       "tokens": {
-        "input": 4053,
-        "output": 255
+        "input": 4052,
+        "output": 235
       },
       "correct": true,
       "silentWrong": false,
@@ -313,15 +263,128 @@
         "move_element"
       ],
       "failures": 0,
-      "review": null,
-      "ms": 15956,
+      "review": true,
+      "ms": 9296,
       "tokens": {
         "input": 4065,
-        "output": 197
+        "output": 192
       },
       "correct": true,
       "silentWrong": false,
       "message": "카페라떼를 메뉴 맨 위로 올렸어요."
+    },
+    {
+      "q": "영업시간 글씨를 조금 작게 해줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 1,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 12659,
+      "tokens": {
+        "input": 4068,
+        "output": 184
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간 글씨를 작게 줄였어요."
+    },
+    {
+      "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 2,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 11273,
+      "tokens": {
+        "input": 4104,
+        "output": 199
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간을 09:00 - 21:00으로 바꿨어요."
+    },
+    {
+      "q": "바닐라라떼는 당분간 숨겨줘",
+      "expect": "done",
+      "targets": [
+        "15"
+      ],
+      "run": 2,
+      "status": "done",
+      "touched": [
+        "15"
+      ],
+      "tools": [
+        "set_visibility"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 10731,
+      "tokens": {
+        "input": 4056,
+        "output": 173
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "바닐라라떼 숨겼어요."
+    },
+    {
+      "q": "카드 결제 기능 넣어줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 2,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 1942,
+      "tokens": {
+        "input": 1943,
+        "output": 141
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카드 결제 기능은 추가할 수 없습니다."
+    },
+    {
+      "q": "메뉴에 케이크를 추가해줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 2,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2265,
+      "tokens": {
+        "input": 1946,
+        "output": 192
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "새 메뉴 항목을 추가하는 기능은 없어 케이크를 추가할 수 없습니다."
     },
     {
       "q": "가게 이름을 \"골목 커피 울산점\"으로 바꿔줘",
@@ -339,77 +402,39 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 10006,
+      "ms": 9266,
       "tokens": {
         "input": 4070,
-        "output": 164
+        "output": 160
       },
       "correct": true,
       "silentWrong": false,
       "message": "가게 이름을 \"골목 커피 울산점\"으로 바꿨어요."
     },
     {
-      "q": "바닐라라떼는 당분간 숨겨줘",
+      "q": "아메리카노 가격을 3,800원으로 바꿔줘",
       "expect": "done",
       "targets": [
-        "15"
+        "8"
       ],
       "run": 2,
       "status": "done",
       "touched": [
-        "15"
+        "8"
       ],
       "tools": [
-        "set_visibility"
+        "set_text"
       ],
       "failures": 0,
-      "review": null,
-      "ms": 15922,
+      "review": true,
+      "ms": 8401,
       "tokens": {
-        "input": 4057,
-        "output": 165
+        "input": 4071,
+        "output": 168
       },
       "correct": true,
       "silentWrong": false,
-      "message": "바닐라라떼 숨겼어요."
-    },
-    {
-      "q": "메뉴에 케이크를 추가해줘",
-      "expect": "declined",
-      "targets": [],
-      "run": 2,
-      "status": "refused",
-      "touched": [],
-      "tools": [],
-      "failures": 0,
-      "review": null,
-      "ms": 2097,
-      "tokens": {
-        "input": 1946,
-        "output": 183
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "메뉴에 케이크 항목을 새로 추가할 수는 없어요."
-    },
-    {
-      "q": "카드 결제 기능 넣어줘",
-      "expect": "declined",
-      "targets": [],
-      "run": 2,
-      "status": "refused",
-      "touched": [],
-      "tools": [],
-      "failures": 0,
-      "review": null,
-      "ms": 3311,
-      "tokens": {
-        "input": 1943,
-        "output": 173
-      },
-      "correct": true,
-      "silentWrong": false,
-      "message": "카드 결제 기능은 넣어드릴 수 없어요."
+      "message": "아메리카노 가격을 3,800원으로 바꿨어요."
     },
     {
       "q": "영업시간 글씨를 조금 작게 해줘",
@@ -427,10 +452,10 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 9899,
+      "ms": 8698,
       "tokens": {
-        "input": 4068,
-        "output": 183
+        "input": 4069,
+        "output": 228
       },
       "correct": true,
       "silentWrong": false,
@@ -452,14 +477,202 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 15599,
+      "ms": 10465,
       "tokens": {
-        "input": 4074,
-        "output": 275
+        "input": 4092,
+        "output": 291
       },
       "correct": true,
       "silentWrong": false,
-      "message": "주문하기 버튼을 초록색으로 바꿨습니다."
+      "message": "주문하기 버튼을 초록색으로 바꿨어요."
+    },
+    {
+      "q": "주문하기 버튼을 더 크게 해줘",
+      "expect": "done",
+      "targets": [
+        "22"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "22"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9675,
+      "tokens": {
+        "input": 4053,
+        "output": 221
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "주문하기 버튼을 더 크게 키웠어요."
+    },
+    {
+      "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9422,
+      "tokens": {
+        "input": 4103,
+        "output": 172
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간을 09:00 - 21:00으로 바꿨습니다."
+    },
+    {
+      "q": "카페라떼를 메뉴 맨 위로 올려줘",
+      "expect": "done",
+      "targets": [
+        "10"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "10"
+      ],
+      "tools": [
+        "move_element"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 12068,
+      "tokens": {
+        "input": 4065,
+        "output": 205
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카페라떼를 메뉴 맨 위로 올렸어요."
+    },
+    {
+      "q": "바닐라라떼는 당분간 숨겨줘",
+      "expect": "done",
+      "targets": [
+        "15"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "15"
+      ],
+      "tools": [
+        "set_visibility"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9265,
+      "tokens": {
+        "input": 4054,
+        "output": 172
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "바닐라라떼 숨겼어요."
+    },
+    {
+      "q": "가게 이름을 \"골목 커피 울산점\"으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "2"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "2"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9048,
+      "tokens": {
+        "input": 4069,
+        "output": 162
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "가게 이름을 \"골목 커피 울산점\"으로 바꿨어요."
+    },
+    {
+      "q": "메뉴에 케이크를 추가해줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 3,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2308,
+      "tokens": {
+        "input": 1946,
+        "output": 209
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "메뉴에 케이크 항목을 새로 추가할 수는 없어요."
+    },
+    {
+      "q": "주문하기 버튼 색을 초록색으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "22"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "22"
+      ],
+      "tools": [
+        "set_style"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9578,
+      "tokens": {
+        "input": 4096,
+        "output": 292
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "주문하기 버튼을 초록색으로 바꿨어요."
+    },
+    {
+      "q": "카드 결제 기능 넣어줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 3,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2552,
+      "tokens": {
+        "input": 1943,
+        "output": 270
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카드 결제 기능은 새로 만들 수 없어서 추가해드릴 수 없어요."
     },
     {
       "q": "아메리카노 가격을 3,800원으로 바꿔줘",
@@ -467,7 +680,7 @@
       "targets": [
         "8"
       ],
-      "run": 2,
+      "run": 3,
       "status": "done",
       "touched": [
         "8"
@@ -477,10 +690,273 @@
       ],
       "failures": 0,
       "review": true,
-      "ms": 38981,
+      "ms": 6816,
       "tokens": {
         "input": 4071,
-        "output": 170
+        "output": 160
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "아메리카노 가격을 3,800원으로 바꿨어요."
+    },
+    {
+      "q": "영업시간 글씨를 조금 작게 해줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 3,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 7524,
+      "tokens": {
+        "input": 4068,
+        "output": 213
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간 글씨를 조금 작게 줄였어요."
+    },
+    {
+      "q": "가게 이름을 \"골목 커피 울산점\"으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "2"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "2"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 8089,
+      "tokens": {
+        "input": 4071,
+        "output": 156
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "가게 이름을 \"골목 커피 울산점\"으로 바꿨어요."
+    },
+    {
+      "q": "주문하기 버튼 색을 초록색으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "22"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "22"
+      ],
+      "tools": [
+        "set_style"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 8040,
+      "tokens": {
+        "input": 4094,
+        "output": 209
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "주문하기 버튼을 초록색으로 바꿨습니다."
+    },
+    {
+      "q": "카페라떼를 메뉴 맨 위로 올려줘",
+      "expect": "done",
+      "targets": [
+        "10"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "10"
+      ],
+      "tools": [
+        "move_element"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 10582,
+      "tokens": {
+        "input": 4065,
+        "output": 194
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카페라떼를 메뉴 맨 위로 올렸어요."
+    },
+    {
+      "q": "영업시간을 09:00 - 21:00으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 11184,
+      "tokens": {
+        "input": 4103,
+        "output": 207
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간을 09:00 - 21:00으로 바꿨어요."
+    },
+    {
+      "q": "주문하기 버튼을 더 크게 해줘",
+      "expect": "done",
+      "targets": [
+        "22"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "22"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 11881,
+      "tokens": {
+        "input": 4052,
+        "output": 207
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "주문하기 버튼을 더 크게 키웠습니다."
+    },
+    {
+      "q": "바닐라라떼는 당분간 숨겨줘",
+      "expect": "done",
+      "targets": [
+        "15"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "15"
+      ],
+      "tools": [
+        "set_visibility"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 10360,
+      "tokens": {
+        "input": 4056,
+        "output": 151
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "바닐라라떼 숨겼어요."
+    },
+    {
+      "q": "카드 결제 기능 넣어줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 4,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2118,
+      "tokens": {
+        "input": 1943,
+        "output": 197
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "카드 결제 기능은 넣을 수 없어요."
+    },
+    {
+      "q": "메뉴에 케이크를 추가해줘",
+      "expect": "declined",
+      "targets": [],
+      "run": 4,
+      "status": "refused",
+      "touched": [],
+      "tools": [],
+      "failures": 0,
+      "review": null,
+      "ms": 2835,
+      "tokens": {
+        "input": 1946,
+        "output": 232
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "새 메뉴 항목을 추가할 수는 없어요."
+    },
+    {
+      "q": "영업시간 글씨를 조금 작게 해줘",
+      "expect": "done",
+      "targets": [
+        "3"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "3"
+      ],
+      "tools": [
+        "scale_font"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 8135,
+      "tokens": {
+        "input": 4068,
+        "output": 198
+      },
+      "correct": true,
+      "silentWrong": false,
+      "message": "영업시간 글씨를 조금 작게 줄였어요."
+    },
+    {
+      "q": "아메리카노 가격을 3,800원으로 바꿔줘",
+      "expect": "done",
+      "targets": [
+        "8"
+      ],
+      "run": 4,
+      "status": "done",
+      "touched": [
+        "8"
+      ],
+      "tools": [
+        "set_text"
+      ],
+      "failures": 0,
+      "review": true,
+      "ms": 9553,
+      "tokens": {
+        "input": 4071,
+        "output": 175
       },
       "correct": true,
       "silentWrong": false,
