@@ -114,7 +114,8 @@ const RUNTIME = String.raw`
   let offline = !cfg.appId;
   const $ = (s) => document.querySelector(s);
   const won = (n) => (F[moneyKey] && F[moneyKey].type === 'money') ? Number(n).toLocaleString('ko-KR') + '원' : String(n);
-  const today = () => new Date().toISOString().slice(0, 10);
+  const ymd = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const today = () => ymd(new Date());
 
   function localSummaries() {
     const t = new Date();
@@ -123,7 +124,7 @@ const RUNTIME = String.raw`
       if (dateKey && s.period !== 'all') {
         const to = today(); let from = to;
         if (s.period === 'month') from = to.slice(0, 8) + '01';
-        if (s.period === 'week') { const d = new Date(t); d.setUTCDate(d.getUTCDate() - 6); from = d.toISOString().slice(0, 10); }
+        if (s.period === 'week') { from = ymd(new Date(Date.now() - 6 * 86400000)); }
         rows = rows.filter((r) => String(r[dateKey]) >= from && String(r[dateKey]) <= to);
       }
       return { value: s.op === 'sum' ? rows.reduce((a, r) => a + (Number(r[s.field]) || 0), 0) : rows.length, op: s.op, field: s.field };

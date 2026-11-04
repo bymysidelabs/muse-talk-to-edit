@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(HERE, '..', '..', 'data', 'store.json');
+const FILE = process.env.BVE_STORE || path.join(HERE, '..', '..', 'data', 'store.json');
 
 const state = { apps: {} };
 let loaded = false;
@@ -29,6 +29,8 @@ export async function load() {
 }
 
 export function save() {
+  // Never write before the file was read, or a fresh process would wipe it.
+  if (!loaded) return saving;
   saving = saving.then(async () => {
     await mkdir(path.dirname(FILE), { recursive: true });
     await writeFile(FILE, JSON.stringify(state));

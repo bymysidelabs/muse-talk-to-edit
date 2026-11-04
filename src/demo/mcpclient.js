@@ -18,7 +18,7 @@ async function rpc(url, token, id, method, params) {
   return json.result;
 }
 
-export async function runMcpAgent({ url, token, message, today = new Date().toISOString().slice(0, 10) }) {
+export async function runMcpAgent({ url, token, message, today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) }) {
   const started = Date.now();
   const wire = [];
   let n = 1;

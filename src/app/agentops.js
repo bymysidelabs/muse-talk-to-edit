@@ -7,7 +7,7 @@
 
 import { respond, toolResultItems } from '../meta.js';
 import { SPEC_SCHEMA, validateSpec } from './spec.js';
-import { addEntry, updateEntry, query, can } from './ops.js';
+import { addEntry, updateEntry, query, can, localDate } from './ops.js';
 
 function usageOf(total, raw) {
   const u = raw && raw.usage;
@@ -113,7 +113,7 @@ function describeApp(app) {
   return `App "${app.spec.title}". Each record is a ${app.spec.entity.name} with fields: ${f}.`;
 }
 
-export async function assist({ app, member, message, today = new Date().toISOString().slice(0, 10) }) {
+export async function assist({ app, member, message, today = localDate() }) {
   const usage = { input: 0, output: 0, cached: 0 };
   const steps = [];
   const started = Date.now();

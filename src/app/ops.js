@@ -12,6 +12,11 @@ export const ROLES = {
   member: new Set(['add', 'update_bool', 'query']),
 };
 
+/** Today's date in the server's own time zone, YYYY-MM-DD. */
+export function localDate(d = new Date()) {
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 export function can(member, action) {
   return Boolean(member && ROLES[member.role] && ROLES[member.role].has(action));
 }
@@ -73,7 +78,7 @@ export function addEntry(app, member, values, via = 'app') {
   const v = checkValues(app, values);
   if (!v.ok) return { ok: false, error: v.errors.join('; ') };
   const df = dateField(app);
-  if (df && !v.values[df]) v.values[df] = new Date().toISOString().slice(0, 10);
+  if (df && !v.values[df]) v.values[df] = localDate();
   const rec = { id: newId(5), ...v.values, _by: member.name, _at: new Date().toISOString() };
   app.entries.push(rec);
   if (via !== 'import') { log(app, { who: member.name, via, action: 'add', id: rec.id, values: v.values }); save(); }
@@ -166,10 +171,10 @@ export function query(app, member, q = {}) {
 /** Values for the summary cards, computed the same way query() does. */
 export function summaries(app, today = new Date()) {
   const df = dateField(app);
-  const iso = (d) => d.toISOString().slice(0, 10);
+  const iso = localDate;
   const range = (period) => {
     if (period === 'today') return { from: iso(today), to: iso(today) };
-    if (period === 'week') { const d = new Date(today); d.setUTCDate(d.getUTCDate() - 6); return { from: iso(d), to: iso(today) }; }
+    if (period === 'week') { const d = new Date(today.getTime() - 6 * 86400000); return { from: iso(d), to: iso(today) }; }
     if (period === 'month') return { from: iso(today).slice(0, 8) + '01', to: iso(today) };
     return {};
   };
