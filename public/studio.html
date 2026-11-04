@@ -7,7 +7,8 @@
 <style>
   :root { --ink:#17181b; --muted:#6b6f78; --line:#e6e4df; --paper:#f7f6f2; --card:#fff; --ok:#1f7a4a; --bad:#b3261e; --warn:#9a6200; --accent:#2b4fd8; --mono: ui-monospace,"SF Mono",Menlo,monospace; }
   * { box-sizing: border-box; }
-  body { margin:0; font:14px/1.45 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif; color:var(--ink); background:var(--paper); }
+  body { margin:0; font:14px/1.45 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif; color:var(--ink); background:var(--paper); word-break: keep-all; overflow-wrap: anywhere; }
+  .call { word-break: break-all; }
   .wrap { display:grid; grid-template-columns: 300px 300px 1fr; gap:20px; padding:18px 24px; height:100vh; }
   .ph { display:flex; flex-direction:column; align-items:center; min-height:0; }
   .who { font-size:13px; color:var(--muted); margin:0 0 8px; height:20px; }
@@ -218,8 +219,21 @@ function pollLog() {
     const st = await api(`/api/apps/${S.appId}/state`, null, owner.token);
     $('#mTaps').textContent = st.taps || 0;
     const via = { agent: 'via agent', voice: 'by voice', mcp: 'via external agent (MCP)', app: 'with the app\'s buttons, 0 tokens', import: 'import' };
-    const what = (l) => l.action === 'refused' ? `<span class="bad">refused</span> <span class="num">${esc(l.values && l.values.tried)}</span>` : `${esc(l.action)} <span class="num">${esc(l.values ? Object.values(l.values).join(' ') : '')}</span>`;
-    $('#log').innerHTML = st.log.slice().reverse().map((l) => `<div><b>${esc(l.who)}</b> ${what(l)} <span class="muted">${esc(via[l.via] || l.via || '')}</span></div>`).join('');
+    const fields = (S.proposal && S.proposal.entity.fields) || [];
+    const recordText = (v) => {
+      if (!v) return '';
+      if (v.note) return v.note;
+      const t = fields.filter((f) => f.type === 'text').map((f) => v[f.key]).filter(Boolean);
+      const money = fields.filter((f) => f.type === 'money' || f.type === 'number').map((f) => v[f.key]).filter((x) => x != null).map((x) => Number(x).toLocaleString() + '원');
+      const cats = fields.filter((f) => f.type === 'enum').map((f) => v[f.key]).filter(Boolean);
+      return [...t, ...money].join(' ') + (cats.length ? ` (${cats.join(', ')})` : '');
+    };
+    const verb = { add: 'added', update: 'changed', delete: 'deleted', join: 'joined as member', layout: 'changed the look:' };
+    const what = (l) => l.via === 'import' ? `imported past payments <span class="num">${esc(recordText(l.values))}</span>` : l.action === 'refused' ? `<span class="bad">was refused</span> <span class="num">${esc(l.values && l.values.tried)}</span>`
+      : l.action === 'layout' ? `${verb.layout} <span class="num">${esc(l.values && l.values.request)}</span>`
+      : `${esc(verb[l.action] || l.action)} <span class="num">${esc(recordText(l.values))}</span>`;
+    const how = (l) => (l.action === 'join' || l.via === 'import') ? '' : (via[l.via] || l.via || '');
+    $('#log').innerHTML = st.log.slice().reverse().map((l) => `<div><b>${esc(l.who)}</b> ${what(l)} <span class="muted">${esc(how(l))}</span></div>`).join('');
   }, 1500);
 }
 
@@ -275,8 +289,8 @@ $('#lookGo').onclick = () => lookEdit();
 
 // Voice: Muse Voice Transcribe, with this app's own words as keywords
 const SAMPLES = {
-  use: [['add_mart', '방금 동네마트에서 이만 이천오백 원 썼어. 식비로 넣어줘.'], ['add_hwaro', '고깃집 화로에서 팔만 칠천 원, 외식으로 넣어줘.'], ['add_taxi', '카카오T 만 이천삼백 원, 교통으로 넣어줘.'], ['ask_eat', '지난달 외식비 얼마야?']],
-  look: [['look_green', '추가 버튼 색을 초록색으로 바꿔줘.']],
+  use: [['add_hwaro', '고깃집 화로에서 팔만 칠천 원, 외식으로 넣어줘.'], ['add_taxi', '카카오T 만 이천삼백 원, 교통으로 넣어줘.'], ['ask_eat', '지난달 외식비 얼마야?']],
+  look: [['look_blue', '추가 버튼 색을 파란색으로 바꿔줘.']],
 };
 function setupVoice() {
   for (const target of ['use', 'look']) {

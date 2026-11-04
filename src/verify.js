@@ -8,6 +8,46 @@ function check(label, ok, detail) {
   return { label, ok: Boolean(ok), detail };
 }
 
+// Colour contrast (WCAG relative luminance). Unknown colour words are skipped, not guessed.
+const NAMED = {
+  white: [255, 255, 255], black: [0, 0, 0], red: [255, 0, 0], green: [0, 128, 0], blue: [0, 0, 255],
+  gray: [128, 128, 128], grey: [128, 128, 128], orange: [255, 165, 0], yellow: [255, 255, 0], purple: [128, 0, 128],
+  pink: [255, 192, 203], brown: [165, 42, 42], navy: [0, 0, 128], teal: [0, 128, 128], darkgreen: [0, 100, 0],
+  lightgray: [211, 211, 211], lightgrey: [211, 211, 211], darkgray: [169, 169, 169], darkgrey: [169, 169, 169],
+};
+export function parseColor(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (NAMED[s]) return { rgb: NAMED[s], a: 1 };
+  let m = s.match(/^#([0-9a-f]{3})$/);
+  if (m) return { rgb: [...m[1]].map((c) => parseInt(c + c, 16)), a: 1 };
+  m = s.match(/^#([0-9a-f]{6})$/);
+  if (m) return { rgb: [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)), a: 1 };
+  m = s.match(/^rgba?\(([^)]+)\)$/);
+  if (m) {
+    const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+    if (p.length >= 3 && p.slice(0, 3).every(Number.isFinite)) return { rgb: p.slice(0, 3), a: p.length > 3 ? p[3] : 1 };
+  }
+  return null;
+}
+function luminance([r, g, b]) {
+  const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+export function contrast(c1, c2) {
+  const [hi, lo] = [luminance(c1), luminance(c2)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+/** The colour behind an element: its own background, or the nearest parent that has one. */
+function backgroundOf(id, byId, computed) {
+  let cur = id;
+  for (let i = 0; i < 30 && cur != null; i++) {
+    const c = computed && computed[cur] && parseColor(computed[cur].backgroundColor);
+    if (c && c.a > 0.5) return c.rgb;
+    cur = byId.get(cur) ? byId.get(cur).parentId : null;
+  }
+  return [253, 252, 249];
+}
+
 function fontPx(style, computed, id) {
   if (style.fontSize) return parseFloat(style.fontSize);
   const c = computed && computed[id] && computed[id].fontSize;
@@ -45,6 +85,15 @@ export function verifyEdit(beforeHtml, afterHtml, call, ctx = {}) {
         const want = String(a.value).trim();
         const got = t.style[a.property];
         checks.push(check(`${a.property} set`, got === want, `${b.style[a.property] || 'stylesheet'} -> ${got}`));
+        // A colour change must leave the element's text readable.
+        if ((a.property === 'color' || a.property === 'backgroundColor') && b.text && ctx.computed && ctx.computed[target]) {
+          const fg = a.property === 'color' ? parseColor(want) : parseColor(ctx.computed[target].color);
+          const bg = a.property === 'backgroundColor' ? parseColor(want) : { rgb: backgroundOf(target, before.byId, ctx.computed) };
+          if (fg && bg) {
+            const ratio = contrast(fg.rgb, bg.rgb);
+            checks.push(check('Text stays readable', ratio >= 3, `contrast ${ratio.toFixed(1)}:1, needs 3:1`));
+          }
+        }
         break;
       }
       case 'scale_font': {

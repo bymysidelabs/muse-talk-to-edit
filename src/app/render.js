@@ -62,14 +62,14 @@ export function renderShell(spec) {
 <title>${esc(spec.title)}</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f5f4f0; color: #1b1c1f; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f5f4f0; color: #1b1c1f; word-break: keep-all; overflow-wrap: anywhere; }
   .app { max-width: 390px; margin: 0 auto; min-height: 100vh; background: #fdfcf9; padding-bottom: 24px; }
   header { padding: 22px 18px 8px; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; }
   header > :not(.appicon) { grid-column: 2; }
   .appicon { display: none; grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
   .appicon.ready { display: block; }
-  h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
-  .sub { margin: 4px 0 0; color: #6b6f78; font-size: 13px; }
+  h1 { margin: 0; font-size: 23px; letter-spacing: -0.02em; word-break: keep-all; line-height: 1.2; }
+  .sub { margin: 4px 0 0; color: #6b6f78; font-size: 13px; word-break: keep-all; }
   .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 14px 4px; }
   .card { background: #fff; border: 1px solid #ebe8e1; border-radius: 14px; padding: 10px 12px; }
   .clabel { font-size: 12px; color: #6b6f78; }
@@ -79,6 +79,7 @@ export function renderShell(spec) {
   .form { padding: 10px 14px 0; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .row input, .row select { font: inherit; font-size: 14px; padding: 9px 10px; border: 1px solid #e3e0d8; border-radius: 10px; background: #fff; min-width: 0; }
+  .row input[type="date"] { font-size: 13px; padding: 9px 6px; }
   .add { margin-top: 8px; width: 100%; border: 0; border-radius: 12px; padding: 11px; font-size: 15px; background: ${accent}; color: #fff; }
   .list { list-style: none; margin: 12px 0 0; padding: 0 14px; }
   .list li { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-top: 1px solid #efece6; font-size: 14px; }
@@ -147,7 +148,9 @@ const RUNTIME = String.raw`
     });
     const list = $('[data-role="list"]');
     if (list) {
-      const rows = [...state.entries].sort((a, b) => dateKey ? String(b[dateKey]).localeCompare(String(a[dateKey])) : 0).slice(0, 30);
+      const rows = [...state.entries].map((r, i) => [r, i])
+        .sort(([a, i], [b, j]) => (dateKey ? String(b[dateKey]).localeCompare(String(a[dateKey])) : 0) || String(b._at || '').localeCompare(String(a._at || '')) || j - i)
+        .map(([r]) => r).slice(0, 30);
       list.innerHTML = '';
       for (const r of rows) {
         const li = document.createElement('li');

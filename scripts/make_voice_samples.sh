@@ -9,3 +9,4 @@ make add_hwaro "고깃집 화로에서 팔만 칠천 원, 외식으로 넣어줘
 make add_taxi  "카카오T 만 이천삼백 원, 교통으로 넣어줘."
 make ask_eat   "지난달 외식비 얼마야?"
 make look_green "추가 버튼 색을 초록색으로 바꿔줘."
+make look_blue "추가 버튼 색을 파란색으로 바꿔줘."

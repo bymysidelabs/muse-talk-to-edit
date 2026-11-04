@@ -67,7 +67,7 @@ The rules that keep it safe and cheap:
 - **One set of operations for everyone.** The app's buttons, your agent, and an invited person's agent over MCP all call the same functions in `src/app/ops.js`, with the same role checks and the same activity log. Refused attempts are logged too.
 - **Numbers come from code.** Totals and counts come from `query_records`. The agent may only write an amount that appears in what the person said or pasted (`src/app/numbers.js` reads "22,500원", "2만 2500원" and "이만 이천오백 원" alike). If the two hearings of a voice request disagree on the amount, the record is held and the person saves it with one tap.
 - **Voice is heard twice.** One pass uses the app's own words as keywords and one does not, in parallel. With the app's words, "고기찍 하루에서 … 의식" became "고깃집 화로에서 … 외식". Without them, a spoken 12,300원 was once heard as 2,300원, which is why amounts are compared by code.
-- **A look change goes live only after the app still works.** Deterministic checks first, then the reviewer, then the app's own buttons in a sandbox, then a commit that only accepts a layout the server produced (by hash).
+- **A look change goes live only after the app still works.** Deterministic checks first (only the target changed, and a colour change must keep its text readable at a 3:1 contrast or better), then the reviewer, then the app's own buttons in a sandbox, then a commit that only accepts a layout the server produced (by hash). The contrast check was added after a run where "make the add button green" turned the button's text green on a green button and every other check passed.
 
 ## Meta models used
 

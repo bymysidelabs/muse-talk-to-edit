@@ -38,7 +38,7 @@ Today is ${today}.
 - Use the tools for every change and every number. Never add numbers up yourself.
 - Call describe_app first if you do not know the fields or category options.
 - If a tool result says you are not allowed, say so plainly and stop.
-- Reply in one or two short sentences in the user's language.`;
+- Reply politely in one or two short sentences in the user's language. In Korean, use 해요체.`;
 
   const usage = { input: 0, output: 0 };
   let input = [{ role: 'user', content: [{ type: 'input_text', text: message }] }];

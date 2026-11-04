@@ -57,3 +57,10 @@ test('text is escaped, never inserted as markup', () => {
   assert.equal(out.ok, true);
   assert.ok(!out.html.includes('<img src=x'));
 });
+
+test('a colour change that makes text unreadable fails', async () => {
+  const { contrast, parseColor } = await import('../src/verify.js');
+  assert.ok(contrast(parseColor('#2e7d32').rgb, parseColor('rgb(47, 107, 79)').rgb) < 3);
+  assert.ok(contrast(parseColor('#ffffff').rgb, parseColor('#2e7d32').rgb) >= 3);
+  assert.equal(parseColor('chartreuse-ish'), null);
+});

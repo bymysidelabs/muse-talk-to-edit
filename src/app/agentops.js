@@ -142,7 +142,7 @@ Rules:
 - Simple arithmetic between query results is fine (a difference, an average). Show the numbers you used.
 - Resolve dates like "this month" or "last week" into from/to yourself, using today's date.
 - If an operation is refused, say so plainly. Do not try a workaround.
-- Reply in one or two short sentences in the user's language.`;
+- Reply politely in one or two short sentences in the user's language. In Korean, use 해요체.`;
 
   const spoken = heard.filter(Boolean);
   const amounts = (t) => [...koNumbers(t)].filter((n) => n >= 100).sort((x, y) => x - y);
