@@ -134,6 +134,8 @@ function mountPhone(el, who, member) {
   who.innerHTML = `<b>${esc(member.name)}</b> ${member.role}`;
 }
 function reloadPhones() { document.querySelectorAll('.phone iframe').forEach((f) => { f.src = f.src; }); }
+// Every action from any member shows on every phone at once, even if a browser slows background timers.
+function refreshPhones() { document.querySelectorAll('.phone iframe').forEach((f) => { try { f.contentWindow.__bveRefresh && f.contentWindow.__bveRefresh(); } catch (e) {} }); }
 function memberSelects() {
   $('#lookWho').innerHTML = S.members.map((m, i) => `<option value="${i}">${esc(m.name)}</option>`).join('');
   $('#asWho').innerHTML = S.members.map((m, i) => `<option value="${i}">${esc(m.name)}'s agent</option>`).join('')
@@ -217,6 +219,7 @@ function pollLog() {
   logTimer = setInterval(async () => {
     const owner = S.members[0]; if (!owner) return;
     const st = await api(`/api/apps/${S.appId}/state`, null, owner.token);
+    if (st.log.length !== S.logLen) { S.logLen = st.log.length; refreshPhones(); }
     $('#mTaps').textContent = st.taps || 0;
     const via = { agent: 'via agent', voice: 'by voice', mcp: 'via external agent (MCP)', app: 'with the app\'s buttons, 0 tokens', import: 'import' };
     const fields = (S.proposal && S.proposal.entity.fields) || [];

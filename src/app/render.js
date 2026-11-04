@@ -292,5 +292,7 @@ const RUNTIME = String.raw`
   window.__bveSeed = (entries) => { state.entries = entries.map((e) => ({ ...e })); refresh(); };
   refresh();
   if (!offline) setInterval(refresh, 1500);
+  // The host page (e.g. the studio) can ask for an immediate refresh after someone else acts.
+  window.__bveRefresh = refresh;
 })();
 `;
