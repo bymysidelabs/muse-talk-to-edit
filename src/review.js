@@ -39,7 +39,10 @@ export async function review({ request, applied, verifications }) {
         { role: 'system', content: SYSTEM },
         { role: 'user', content: `Request: ${request}\n\nApplied changes and measurements:\n${facts}` },
       ],
-      max_tokens: 2000,
+      // Muse Spark Open always reasons. Low effort keeps the reasoning short enough
+      // that the verdict is never cut off by the token limit.
+      reasoning_effort: 'low',
+      max_tokens: 4000,
       temperature: 0,
     }),
   });
