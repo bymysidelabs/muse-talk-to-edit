@@ -70,7 +70,7 @@ export async function respond({ instructions, input, tools, previousResponseId }
     instructions,
     input,
     tools: tools.map((t) => ({ type: 'function', ...t })),
-    reasoning: { effort: 'low' },
+    reasoning: { effort: process.env.META_REASONING || 'low' },
     store: true,
   };
   if (previousResponseId) {

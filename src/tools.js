@@ -1,7 +1,7 @@
 // Deterministic edit operations on a mini-app's HTML string.
 // Every element carries data-bve-id="N". The model may only call these tools.
 
-const ID_ATTR = 'data-bve-id';
+import { parse, ID_ATTR } from './dom.js';
 
 const STYLE_WHITELIST = new Set([
   'fontSize', 'fontWeight', 'color', 'background', 'backgroundColor',
@@ -74,6 +74,16 @@ function elementHtml(html, id) {
   return html.slice(f.openStart, f.closeEnd);
 }
 
+// Values the model may write into a style attribute. Anything that could close
+// the attribute or smuggle a second declaration is rejected.
+const SAFE_VALUE = /^[#(),.%\s\w-]{1,60}$/;
+
+function escapeText(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Exposed to the model. swap_elements and duplicate_element exist below but are
+// not offered: they re-number elements and caused wrong-target edits in testing.
 export const TOOL_DEFS = [
   {
     name: 'set_text',
@@ -86,10 +96,14 @@ export const TOOL_DEFS = [
   },
   {
     name: 'set_style',
-    description: 'Set one CSS property on one element. Properties outside the whitelist are rejected.',
+    description: 'Set one CSS property on one element. Use this for colours and backgrounds too.',
     parameters: {
       type: 'object',
-      properties: { id: { type: 'string' }, property: { type: 'string' }, value: { type: 'string' } },
+      properties: {
+        id: { type: 'string', description: 'element id from the list, digits only' },
+        property: { type: 'string', enum: [...STYLE_WHITELIST] },
+        value: { type: 'string', description: 'plain CSS value, e.g. 18px, #2e7d32, bold' },
+      },
       required: ['id', 'property', 'value'],
     },
   },
@@ -120,37 +134,15 @@ export const TOOL_DEFS = [
       required: ['id', 'hidden'],
     },
   },
-  {
-    name: 'swap_elements',
-    description: 'Swap two elements in place.',
-    parameters: {
-      type: 'object',
-      properties: { id_a: { type: 'string' }, id_b: { type: 'string' } },
-      required: ['id_a', 'id_b'],
-    },
-  },
-  {
-    name: 'duplicate_element',
-    description: 'Copy an element right after itself. The copy carries no id until the next load.',
-    parameters: {
-      type: 'object',
-      properties: { id: { type: 'string' } },
-      required: ['id'],
-    },
-  },
-  {
-    name: 'replace_color',
-    description: 'Replace one colour value with another inside a single element.',
-    parameters: {
-      type: 'object',
-      properties: { id: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' } },
-      required: ['id', 'from', 'to'],
-    },
-  },
 ];
 
-export function applyTool(html, name, args) {
+export const ALLOWED_TOOLS = new Set(TOOL_DEFS.map((t) => t.name));
+
+export function applyTool(html, name, args, ctx = {}) {
   const a = args || {};
+  // Models often write "#12" or "background-color". Accept those spellings.
+  if (a.id != null) a.id = String(a.id).replace(/^#/, '').trim();
+  if (typeof a.property === 'string') a.property = camelName(a.property.trim());
   const needsElement = ['set_text', 'set_style', 'scale_font', 'move_element', 'set_visibility', 'duplicate_element', 'replace_color'];
   const found = a.id != null ? findTag(html, a.id) : null;
   if (needsElement.includes(name) && !found) {
@@ -162,10 +154,11 @@ export function applyTool(html, name, args) {
       case 'set_text': {
         const inner = html.slice(found.openEnd, found.closeStart);
         if (/<[a-zA-Z]/.test(inner)) return { ok: false, error: 'element has child elements; set_text would delete them' };
-        return { ok: true, html: html.slice(0, found.openEnd) + String(a.text) + html.slice(found.closeStart) };
+        return { ok: true, html: html.slice(0, found.openEnd) + escapeText(a.text) + html.slice(found.closeStart) };
       }
       case 'set_style': {
         if (!STYLE_WHITELIST.has(a.property)) return { ok: false, error: `property ${a.property} is not allowed` };
+        if (!SAFE_VALUE.test(String(a.value))) return { ok: false, error: `value ${a.value} is not a plain CSS value` };
         const style = readStyle(found.openTag);
         style[a.property] = String(a.value);
         return { ok: true, html: replaceOpenTag(html, found, writeStyle(found.openTag, style)) };
@@ -174,7 +167,8 @@ export function applyTool(html, name, args) {
         const factor = Number(a.factor);
         if (!(factor >= 0.5 && factor <= 2)) return { ok: false, error: 'factor must be between 0.5 and 2' };
         const style = readStyle(found.openTag);
-        const current = parseFloat(style.fontSize || '16');
+        const computed = ctx.computed && ctx.computed[a.id] && ctx.computed[a.id].fontSize;
+        const current = parseFloat(style.fontSize || computed || '16');
         style.fontSize = `${Math.round(current * factor)}px`;
         return { ok: true, html: replaceOpenTag(html, found, writeStyle(found.openTag, style)) };
       }
@@ -184,6 +178,7 @@ export function applyTool(html, name, args) {
         return { ok: true, html: replaceOpenTag(html, found, writeStyle(found.openTag, style)) };
       }
       case 'replace_color': {
+        if (!SAFE_VALUE.test(String(a.to))) return { ok: false, error: `colour ${a.to} is not a plain CSS value` };
         const block = elementHtml(html, a.id);
         if (!block.includes(a.from)) return { ok: false, error: `${a.from} does not appear in that element` };
         const replaced = block.split(a.from).join(a.to);
@@ -269,13 +264,25 @@ function siblingSpans(html, parent, childTag) {
 }
 
 export function elementIndex(html) {
-  const out = [];
-  const re = new RegExp(`<([a-zA-Z][a-zA-Z0-9-]*)\\b[^>]*${ID_ATTR}="([^"]+)"[^>]*>`, 'g');
-  let m;
-  while ((m = re.exec(html))) {
-    const openEnd = m.index + m[0].length;
-    const text = html.slice(openEnd).split('<')[0].trim().slice(0, 80);
-    out.push({ id: m[2], tag: m[1], text });
-  }
-  return out;
+  return parse(html).elements.map((e) => ({ id: e.id, tag: e.tag, text: e.text.slice(0, 80) }));
+}
+
+/** One line per element for the model: id, parent, tag, role, own text, measured style. */
+export function describeElements(html, computed = {}) {
+  return parse(html).elements.map((e) => {
+    const c = computed[e.id] || {};
+    const bits = [
+      `#${e.id}`,
+      e.parentId ? `in #${e.parentId}` : 'root',
+      e.tag + (e.className ? `.${e.className.split(/\s+/).join('.')}` : ''),
+      e.action ? `action=${e.action}` : '',
+      e.role ? `role=${e.role}` : '',
+      e.text ? `"${e.text.slice(0, 60)}"` : '',
+      c.fontSize ? `font ${c.fontSize}` : '',
+      c.color ? `color ${c.color}` : '',
+      c.backgroundColor && c.backgroundColor !== 'rgba(0, 0, 0, 0)' ? `bg ${c.backgroundColor}` : '',
+      c.display === 'none' ? 'hidden' : '',
+    ];
+    return bits.filter(Boolean).join(' | ');
+  }).join('\n');
 }

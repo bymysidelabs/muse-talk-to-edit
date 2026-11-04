@@ -3,50 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>할 일 메모</title>
+<title>골목 커피</title>
 <style>
   :root { color-scheme: light; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f4f5f7; color: #16181d; }
-  .phone { max-width: 390px; margin: 0 auto; min-height: 100vh; background: #fff; display: flex; flex-direction: column; }
-  header { padding: 22px 20px 14px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; background: #f6f3ee; color: #1f1b16; }
+  .app { max-width: 390px; margin: 0 auto; min-height: 100vh; background: #fffdf9; display: flex; flex-direction: column; }
+  header { padding: 24px 20px 12px; }
   h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
-  .sub { margin: 6px 0 0; color: #6b7280; font-size: 14px; }
-  ul { list-style: none; margin: 0; padding: 0 16px; flex: 1; }
-  li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 12px; border-radius: 12px; background: #fafafa; margin-bottom: 10px; }
-  .label { font-size: 16px; }
-  .meta { font-size: 12px; color: #6b7280; }
-  footer { padding: 16px 20px 28px; }
-  .save { width: 100%; padding: 12px 16px; font-size: 14px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; }
+  .hours { margin: 6px 0 0; color: #7a6f63; font-size: 14px; }
+  .menu { list-style: none; margin: 8px 0 0; padding: 0 16px; }
+  .item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 14px; border-radius: 14px; background: #f4efe7; margin-bottom: 10px; }
+  .name { font-size: 16px; font-weight: 600; }
+  .price { font-size: 13px; color: #7a6f63; margin-top: 2px; }
+  .add { border: 0; border-radius: 999px; padding: 8px 14px; font-size: 13px; background: #fff; color: #1f1b16; }
+  .cart { margin: 12px 20px 0; font-size: 14px; color: #4b4239; }
+  footer { margin-top: auto; padding: 16px 20px 28px; }
+  .order { width: 100%; padding: 12px 16px; font-size: 15px; border: 0; border-radius: 12px; background: #6b4f3a; color: #fff; }
+  .toast { margin: 10px 0 0; text-align: center; font-size: 14px; color: #2f7a4b; min-height: 20px; }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="app">
   <header data-bve-id="1">
-    <h1 data-bve-id="2">오늘 할 일</h1>
-    <p class="sub" data-bve-id="3">세 개만 골라서 끝내기</p>
+    <h1 data-bve-id="2">골목 커피</h1>
+    <p class="hours" data-bve-id="3">영업시간 08:00 - 20:00</p>
   </header>
-  <ul data-bve-id="4">
-    <li data-bve-id="5">
-      <span class="label" data-bve-id="6">전입신고 서류 챙기기</span>
-      <span class="meta" data-bve-id="7">오전</span>
+  <ul class="menu" data-bve-id="4">
+    <li class="item" data-bve-id="5">
+      <div data-bve-id="6">
+        <div class="name" data-bve-id="7">아메리카노</div>
+        <div class="price" data-role="price" data-bve-id="8">3,500원</div>
+      </div>
+      <button class="add" data-action="add" data-bve-id="9">담기</button>
     </li>
-    <li data-bve-id="8">
-      <span class="label" data-bve-id="9">분리수거 그물망 사기</span>
-      <span class="meta" data-bve-id="10">오후</span>
+    <li class="item" data-bve-id="10">
+      <div data-bve-id="11">
+        <div class="name" data-bve-id="12">카페라떼</div>
+        <div class="price" data-role="price" data-bve-id="13">4,000원</div>
+      </div>
+      <button class="add" data-action="add" data-bve-id="14">담기</button>
     </li>
-    <li data-bve-id="11">
-      <span class="label" data-bve-id="12">도시가스 자동이체 확인</span>
-      <span class="meta" data-bve-id="13">저녁</span>
+    <li class="item" data-bve-id="15">
+      <div data-bve-id="16">
+        <div class="name" data-bve-id="17">바닐라라떼</div>
+        <div class="price" data-role="price" data-bve-id="18">4,500원</div>
+      </div>
+      <button class="add" data-action="add" data-bve-id="19">담기</button>
     </li>
   </ul>
-  <footer data-bve-id="14">
-    <button class="save" data-bve-id="15">저장</button>
+  <p class="cart" data-role="cart" data-bve-id="20">장바구니 0잔 · 0원</p>
+  <footer data-bve-id="21">
+    <button class="order" data-action="order" data-bve-id="22">주문하기</button>
+    <p class="toast" data-role="toast" data-bve-id="23"></p>
   </footer>
 </div>
 <script>
-  // The harness posts the page HTML to the server; a real client would also send
-  // a screenshot for the verify pass. This page stays dumb on purpose.
-  window.bveGetHtml = () => document.documentElement.outerHTML;
+(() => {
+  // App behaviour. Bound by data-action / data-role, so it survives visual edits.
+  const state = { count: 0, total: 0 };
+  const $ = (sel) => document.querySelector(sel);
+  const won = (n) => n.toLocaleString('ko-KR') + '원';
+  const priceOf = (btn) => {
+    const item = btn.closest('li');
+    const el = item && item.querySelector('[data-role="price"]');
+    return el ? Number(el.textContent.replace(/[^0-9]/g, '')) || 0 : 0;
+  };
+  const render = () => { $('[data-role="cart"]').textContent = `장바구니 ${state.count}잔 · ${won(state.total)}`; };
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'add') { state.count += 1; state.total += priceOf(btn); render(); }
+    if (btn.dataset.action === 'order') {
+      $('[data-role="toast"]').textContent = state.count ? '주문이 접수됐어요' : '먼저 메뉴를 담아주세요';
+    }
+  });
+
+  // Behaviour checks the editor runs after every change. Each returns true when
+  // the existing feature still works. They click the real buttons.
+  window.__smoke = [
+    { name: 'Add a drink to the cart', run: () => {
+      const btn = [...document.querySelectorAll('[data-action="add"]')].find((b) => b.offsetParent !== null);
+      if (!btn) return false;
+      const before = state.count; btn.click(); return state.count === before + 1;
+    } },
+    { name: 'Cart total follows the menu price', run: () => {
+      const btn = [...document.querySelectorAll('[data-action="add"]')].find((b) => b.offsetParent !== null);
+      if (!btn) return false;
+      const before = state.total; btn.click(); return state.total - before === priceOf(btn) && priceOf(btn) > 0;
+    } },
+    { name: 'Order button confirms the order', run: () => {
+      const btn = $('[data-action="order"]');
+      if (!btn || btn.offsetParent === null) return false;
+      btn.click(); return $('[data-role="toast"]').textContent === '주문이 접수됐어요';
+    } },
+  ];
+})();
 </script>
 </body>
 </html>

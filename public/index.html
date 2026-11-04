@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talk-to-edit, verified</title>
+<style>
+  :root {
+    --ink: #17181b; --muted: #6b6f78; --line: #e6e4df; --paper: #f7f6f2; --card: #ffffff;
+    --ok: #1f7a4a; --bad: #b3261e; --warn: #9a6200; --accent: #2b4fd8;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; color: var(--ink); background: var(--paper); }
+  .wrap { display: grid; grid-template-columns: 430px 1fr; gap: 28px; padding: 24px 32px; height: 100vh; }
+  .stage { display: flex; flex-direction: column; align-items: center; }
+  .phone { width: 402px; height: 820px; border-radius: 44px; background: #111; padding: 12px; box-shadow: 0 1px 0 #0002, 0 20px 40px -24px #0006; }
+  .phone iframe { width: 100%; height: 100%; border: 0; border-radius: 34px; background: #fff; }
+  .side { display: flex; flex-direction: column; min-height: 0; }
+  h1 { font-size: 20px; margin: 4px 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .ask { display: flex; gap: 8px; }
+  .ask input { flex: 1; font: inherit; font-size: 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+  .ask button, .btn { font: inherit; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn:disabled, .ask button:disabled { opacity: .45; cursor: default; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .chip { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+  .chip small { color: var(--muted); margin-left: 4px; }
+  .grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; min-height: 0; flex: 1; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow: auto; min-height: 0; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  .step { padding: 8px 0; border-top: 1px solid var(--line); }
+  .step:first-of-type { border-top: 0; }
+  .who { font-size: 12px; color: var(--muted); }
+  .call { font-family: var(--mono); font-size: 12.5px; }
+  .chk { font-size: 13px; display: flex; gap: 6px; }
+  .chk .d { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-weight: 600; font-size: 13px; }
+  .status.done { background: #e6f4ec; color: var(--ok); }
+  .status.refused { background: #f1f0ec; color: var(--ink); }
+  .status.needs_confirmation, .status.rolled_back { background: #fff4e0; color: var(--warn); }
+  .row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; }
+  .num { font-family: var(--mono); font-size: 12.5px; }
+  .foot { display: flex; gap: 8px; align-items: center; margin-top: 12px; color: var(--muted); font-size: 12px; }
+  .foot .spacer { flex: 1; }
+  .msg { margin: 8px 0 0; font-size: 15px; }
+  .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="phone"><iframe id="frame" title="The app being edited"></iframe></div>
+  </div>
+  <div class="side">
+    <h1>Talk-to-edit, verified</h1>
+    <p class="sub">Say what to change. The agent edits only that, measures the result in the running app, and rolls back anything that breaks.</p>
+    <form class="ask" id="ask">
+      <input id="q" autocomplete="off" placeholder="e.g. 주문하기 버튼을 더 크게 해줘">
+      <button id="go">Edit</button>
+    </form>
+    <div class="presets" id="presets"></div>
+    <div class="grid">
+      <div class="card" id="trace"><h2>What the agent did</h2><p class="empty">Nothing yet.</p></div>
+      <div class="card" id="proof"><h2>Measured in the running app</h2><p class="empty">Results appear after an edit.</p></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" id="undo" disabled>Undo</button>
+      <button class="btn ghost" id="reset">Reset app</button>
+      <span class="spacer"></span>
+      <span id="meter">Muse Spark 1.3 edits · Muse Spark Open reviews</span>
+    </div>
+  </div>
+</div>
+<script>
+const PRESETS = [
+  ['주문하기 버튼을 더 크게 해줘', 'make the order button bigger'],
+  ['영업시간을 09:00 - 21:00으로 바꿔줘', 'change opening hours'],
+  ['카페라떼를 메뉴 맨 위로 올려줘', 'move latte to the top'],
+  ['바닐라라떼는 당분간 숨겨줘', 'hide vanilla latte'],
+  ['아메리카노 가격을 3,800원으로 바꿔줘', 'change a price'],
+  ['메뉴에 케이크를 추가해줘', 'add a new item'],
+];
+const PRICE = { in: 1.25 / 1e6, out: 4.25 / 1e6 };
+
+const $ = (s) => document.querySelector(s);
+const frame = $('#frame');
+let current = '';
+const history = [];
+let pending = null;
+let spent = 0;
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function render(html) {
+  return new Promise((resolve) => { frame.onload = () => resolve(); frame.srcdoc = html; });
+}
+
+function measure() {
+  const d = frame.contentDocument; const out = {};
+  d.querySelectorAll('[data-bve-id]').forEach((el) => {
+    const cs = d.defaultView.getComputedStyle(el); const r = el.getBoundingClientRect();
+    out[el.dataset.bveId] = { fontSize: cs.fontSize, color: cs.color, backgroundColor: cs.backgroundColor, display: cs.display,
+      w: Math.round(r.width), h: Math.round(r.height), order: [...el.parentElement.children].indexOf(el), text: (el.childElementCount ? '' : el.textContent.trim()) };
+  });
+  return out;
+}
+
+function smoke() {
+  const list = frame.contentWindow.__smoke || [];
+  return list.map((t) => { let ok = false; try { ok = Boolean(t.run()); } catch (e) { ok = false; } return { name: t.name, ok }; });
+}
+
+async function inspect(html) {
+  await render(html);
+  const m = measure();
+  const s = smoke();
+  await render(html); // fresh state after the behaviour checks clicked things
+  return { m, s };
+}
+
+function flash(ids) {
+  const d = frame.contentDocument;
+  ids.forEach((id) => { const el = d.querySelector(`[data-bve-id="${id}"]`); if (el) { el.style.outline = '3px solid #2b4fd8'; el.style.outlineOffset = '3px'; } });
+  setTimeout(() => ids.forEach((id) => { const el = d.querySelector(`[data-bve-id="${id}"]`); if (el) el.style.outline = ''; }), 2400);
+}
+
+function traceHtml(r) {
+  const rows = r.steps.map((s) => {
+    if (s.type === 'model') {
+      const what = s.calls.length ? s.calls.map((c) => `<div class="call">${esc(c.name)}(${esc(JSON.stringify(c.args))})</div>`).join('') : `<div>${esc(s.text || '(no reply)')}</div>`;
+      return `<div class="step"><div class="who">Muse Spark 1.3 · turn ${s.turn} · ${(s.ms / 1000).toFixed(1)}s</div>${what}</div>`;
+    }
+    if (s.type === 'verify') {
+      const head = s.pass ? '<span class="ok">Verified</span>' : '<span class="bad">Rolled back</span>';
+      const chks = s.checks.map((c) => `<div class="chk"><span class="${c.ok ? 'ok' : 'bad'}">${c.ok ? '✓' : '✗'}</span><span>${esc(c.label)}</span><span class="d">${esc(c.detail)}</span></div>`).join('');
+      return `<div class="step"><div class="who">Deterministic check · ${esc(s.name)}</div>${head}${chks}</div>`;
+    }
+    if (s.type === 'review') {
+      const v = s.satisfied === true ? '<span class="ok">Satisfied</span>' : s.satisfied === false ? '<span class="bad">Not satisfied</span>' : '<span class="warn">No verdict</span>';
+      return `<div class="step"><div class="who">Reviewer · Muse Spark Open · ${(s.ms / 1000).toFixed(1)}s</div>${v} <span>${esc(s.reason)}</span></div>`;
+    }
+    if (s.type === 'discarded') return `<div class="step"><div class="who">Tool call discarded</div><span class="bad">${esc(s.name)} is not an allowed tool</span></div>`;
+    if (s.type === 'tool_error') return `<div class="step"><div class="who">Tool refused</div><span class="bad">${esc(s.error)}</span></div>`;
+    return '';
+  }).join('');
+  return `<h2>What the agent did</h2><div><span class="status ${r.status}">${esc(labelFor(r.status))}</span> <span class="who">${(r.ms / 1000).toFixed(1)}s · ${r.failures} retries</span></div><p class="msg">${esc(r.message)}</p>${rows}`;
+}
+
+function labelFor(s) { return { done: 'Done', refused: 'Not possible', needs_confirmation: 'Needs your confirmation', rolled_back: 'Rolled back' }[s] || s; }
+
+function proofHtml(targets, before, after, extra) {
+  const props = ['fontSize', 'color', 'backgroundColor', 'display', 'text', 'order', 'h'];
+  const names = { fontSize: 'font size', color: 'colour', backgroundColor: 'background', display: 'display', text: 'text', order: 'position', h: 'height' };
+  let html = '<h2>Measured in the running app</h2>';
+  for (const id of targets) {
+    const b = before.m[id] || {}; const a = after.m[id] || {};
+    const diffs = props.filter((p) => String(b[p]) !== String(a[p]));
+    html += `<div class="row"><b>Changed #${esc(id)}</b></div>`;
+    html += diffs.length ? diffs.map((p) => `<div class="row"><span>${names[p]}</span><span class="num">${esc(p === 'order' ? Number(b[p]) + 1 : b[p])} → ${esc(p === 'order' ? Number(a[p]) + 1 : a[p])}</span></div>`).join('')
+      : '<div class="row"><span class="warn">No visible difference measured</span></div>';
+  }
+  const others = Object.keys(before.m).filter((id) => !targets.includes(id));
+  const changedOthers = others.filter((id) => ['fontSize', 'color', 'backgroundColor', 'display', 'text'].some((p) => String(before.m[id][p]) !== String((after.m[id] || {})[p])));
+  html += `<div class="row" style="margin-top:8px"><span>Other elements unchanged</span><span class="num ${changedOthers.length ? 'bad' : 'ok'}">${others.length - changedOthers.length} / ${others.length}</span></div>`;
+  html += '<div style="margin-top:8px"><b>Existing behaviour, clicked for real</b></div>';
+  html += after.s.map((t, i) => `<div class="row"><span>${esc(t.name)}</span><span class="${t.ok ? 'ok' : 'bad'}">${t.ok ? '✓ still works' : (before.s[i] && before.s[i].ok ? '✗ broke' : '✗ (was already failing)')}</span></div>`).join('');
+  if (extra) html += extra;
+  return html;
+}
+
+async function run(request) {
+  if (!request.trim()) return;
+  $('#go').disabled = true; $('#q').disabled = true;
+  $('#trace').innerHTML = '<h2>What the agent did</h2><p class="empty">Working…</p>';
+  $('#proof').innerHTML = '<h2>Measured in the running app</h2><p class="empty">Waiting for the edit.</p>';
+  pending = null;
+  try {
+    const before = await inspect(current);
+    const res = await fetch('/api/edit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ html: current, request, computed: before.m }) });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error || res.status);
+    spent += r.usage.input * PRICE.in + r.usage.output * PRICE.out;
+    $('#meter').textContent = `Muse Spark 1.3 edits · Muse Spark Open reviews · tokens this session ≈ $${spent.toFixed(3)}`;
+
+    const targets = [...new Set(r.applied.map((a) => String(a.args.id)))];
+    if (r.status === 'done') {
+      const after = await inspect(r.html);
+      const broke = after.s.some((t, i) => !t.ok && before.s[i] && before.s[i].ok);
+      if (broke) {
+        // Third gate: if a feature that worked before stopped working, keep the old app.
+        await render(current);
+        r.status = 'rolled_back';
+        r.message = 'The edit passed its own checks but broke an existing feature, so it was rolled back.';
+        $('#trace').innerHTML = traceHtml(r);
+        $('#proof').innerHTML = proofHtml(targets, before, after);
+      } else {
+        history.push(current); current = r.html; $('#undo').disabled = false;
+        $('#trace').innerHTML = traceHtml(r);
+        $('#proof').innerHTML = proofHtml(targets, before, after);
+        flash(targets);
+      }
+    } else if (r.status === 'needs_confirmation' && r.proposedHtml) {
+      pending = r.proposedHtml;
+      const after = await inspect(r.proposedHtml); await render(current);
+      $('#trace').innerHTML = traceHtml(r);
+      $('#proof').innerHTML = proofHtml(targets, before, after, '<div class="foot"><button class="btn" id="apply">Apply anyway</button><button class="btn ghost" id="discard">Keep original</button></div>');
+      $('#apply').onclick = async () => { history.push(current); current = pending; pending = null; await render(current); $('#undo').disabled = false; $('#proof').querySelector('.foot').remove(); };
+      $('#discard').onclick = () => { pending = null; $('#proof').querySelector('.foot').remove(); };
+    } else {
+      await render(current);
+      $('#trace').innerHTML = traceHtml(r);
+      $('#proof').innerHTML = '<h2>Measured in the running app</h2><p>Nothing was changed. The app is exactly as it was.</p>';
+    }
+  } catch (e) {
+    $('#trace').innerHTML = `<h2>What the agent did</h2><p class="bad">${esc(e.message || e)}</p>`;
+  } finally {
+    $('#go').disabled = false; $('#q').disabled = false;
+  }
+}
+
+$('#ask').onsubmit = (e) => { e.preventDefault(); run($('#q').value); };
+$('#undo').onclick = async () => { if (!history.length) return; current = history.pop(); await render(current); $('#undo').disabled = !history.length; $('#proof').innerHTML = '<h2>Measured in the running app</h2><p>Undone. Restored the previous version.</p>'; };
+$('#reset').onclick = async () => { current = await (await fetch('/app')).text(); history.length = 0; $('#undo').disabled = true; await render(current); };
+PRESETS.forEach(([ko, en]) => { const b = document.createElement('button'); b.className = 'chip'; b.innerHTML = `${esc(ko)}<small>${esc(en)}</small>`; b.onclick = () => { $('#q').value = ko; run(ko); }; $('#presets').appendChild(b); });
+(async () => { current = await (await fetch('/app')).text(); await render(current); })();
+</script>
+</body>
+</html>

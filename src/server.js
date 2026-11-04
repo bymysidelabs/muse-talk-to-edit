@@ -9,6 +9,7 @@ import { editOnce } from './agent.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEMO = path.join(HERE, '..', 'demo', 'app.html');
+const UI = path.join(HERE, '..', 'public', 'index.html');
 const PORT = Number(process.env.PORT || 8787);
 
 function json(res, code, body) {
@@ -41,6 +42,13 @@ function readBody(req) {
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+      const html = await readFile(UI, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+      return;
+    }
+
+    if (req.method === 'GET' && req.url === '/app') {
       const html = await readFile(DEMO, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(html);
@@ -58,7 +66,8 @@ const server = http.createServer(async (req, res) => {
         json(res, 400, { error: 'html and request are required' });
         return;
       }
-      const result = await editOnce({ html: body.html, request: body.request });
+      const computed = body.computed && typeof body.computed === 'object' ? body.computed : {};
+      const result = await editOnce({ html: body.html, request: body.request.slice(0, 500), computed });
       json(res, 200, result);
       return;
     }
@@ -69,6 +78,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+// Local only: the server holds API keys in its environment.
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`muse-talk-to-edit on http://localhost:${PORT}`);
 });

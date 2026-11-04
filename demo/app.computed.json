@@ -1,0 +1,140 @@
+{
+ "1": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "2": {
+  "fontSize": "26px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "3": {
+  "fontSize": "14px",
+  "color": "rgb(122, 111, 99)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "4": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "5": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(244, 239, 231)",
+  "display": "flex"
+ },
+ "6": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "7": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "8": {
+  "fontSize": "13px",
+  "color": "rgb(122, 111, 99)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "9": {
+  "fontSize": "13px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(255, 255, 255)",
+  "display": "block"
+ },
+ "10": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(244, 239, 231)",
+  "display": "flex"
+ },
+ "11": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "12": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "13": {
+  "fontSize": "13px",
+  "color": "rgb(122, 111, 99)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "14": {
+  "fontSize": "13px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(255, 255, 255)",
+  "display": "block"
+ },
+ "15": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(244, 239, 231)",
+  "display": "flex"
+ },
+ "16": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "17": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "18": {
+  "fontSize": "13px",
+  "color": "rgb(122, 111, 99)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "19": {
+  "fontSize": "13px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgb(255, 255, 255)",
+  "display": "block"
+ },
+ "20": {
+  "fontSize": "14px",
+  "color": "rgb(75, 66, 57)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "21": {
+  "fontSize": "16px",
+  "color": "rgb(31, 27, 22)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ },
+ "22": {
+  "fontSize": "15px",
+  "color": "rgb(255, 255, 255)",
+  "backgroundColor": "rgb(107, 79, 58)",
+  "display": "inline-block"
+ },
+ "23": {
+  "fontSize": "14px",
+  "color": "rgb(47, 122, 75)",
+  "backgroundColor": "rgba(0, 0, 0, 0)",
+  "display": "block"
+ }
+}
