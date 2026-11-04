@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repeat less, together: inside Muse</title>
+<style>
+  :root {
+    --paper:#E8EFE3; --slip:#F8FAF4; --ink:#1E2944; --ink2:#5E6A66; --rule:#C7D3C2; --seal:#B5372C;
+    --m-bg:#FFFFFF; --m-surface:#F2F3F5; --m-text:#1C1E21; --m-sub:#65676B; --m-blue:#0064E0; --m-line:#E4E6EB;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--paper); color: var(--ink); font-family: "NanumSquare", "Apple SD Gothic Neo", sans-serif; overflow: hidden; word-break: keep-all; overflow-wrap: anywhere; position: relative; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background: repeating-radial-gradient(circle at 18% 120%, transparent 0 13px, rgba(30,41,68,.045) 13px 14px), repeating-radial-gradient(circle at 110% -10%, transparent 0 17px, rgba(30,41,68,.035) 17px 18px); }
+  .stage { position: relative; display: grid; grid-template-columns: 652px 1fr; gap: 34px; padding: 34px 40px 30px; height: 100vh; }
+
+  /* ---------- Muse phones (a mock-up of the Muse app) ---------- */
+  .phones { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-content: center; }
+  .ph-label { font-family: "DIN Alternate", sans-serif; font-weight: 700; font-size: 14px; color: var(--ink2); margin: 0 0 8px 6px; display: flex; align-items: center; gap: 7px; }
+  .ph-label img { height: 15px; }
+  .phone { width: 314px; height: 664px; background: #15192A; border-radius: 46px; padding: 9px; }
+  .screen { position: relative; width: 100%; height: 100%; background: var(--m-bg); border-radius: 38px; overflow: hidden; display: flex; flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", sans-serif; color: var(--m-text); }
+  .sbar { height: 30px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 24px 0 26px; font-size: 12.5px; font-weight: 600; }
+  .sbar .bat { width: 22px; height: 11px; border: 1.5px solid var(--m-text); border-radius: 3px; position: relative; }
+  .sbar .bat::after { content: ""; position: absolute; inset: 1.5px 4px 1.5px 1.5px; background: var(--m-text); border-radius: 1px; }
+  .hdr { flex: none; display: flex; flex-direction: column; align-items: center; padding: 4px 0 10px; border-bottom: 1px solid var(--m-line); }
+  .ava { width: 66px; height: 66px; border-radius: 50%; overflow: hidden; background: #EFE7DC; }
+  .ava video { width: 100%; height: 100%; object-fit: cover; }
+  .hdr .nm { font-weight: 700; font-size: 16px; margin-top: 6px; }
+  .hdr .st { font-size: 12.5px; color: var(--m-sub); margin-top: 1px; display: flex; align-items: center; gap: 5px; min-height: 17px; }
+  .hdr .st i { width: 6px; height: 6px; border-radius: 50%; background: #31A24C; display: none; }
+  .hdr.busy .st i { display: inline-block; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .chat { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px 6px; display: flex; flex-direction: column; gap: 8px; }
+  .chat > * { flex: none; }
+  .chat::-webkit-scrollbar { display: none; }
+  .b { max-width: 84%; padding: 8px 12px; border-radius: 18px; font-size: 13.5px; line-height: 1.38; }
+  .b.j { background: var(--m-surface); align-self: flex-start; border-bottom-left-radius: 6px; }
+  .b.u { background: var(--m-blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; }
+  .b.u .v { display: flex; align-items: center; gap: 8px; font-size: 12px; opacity: .9; }
+  .b.u .v svg { flex: none; }
+  .b.u .tx { margin-top: 4px; }
+  .tool { align-self: flex-start; font-size: 11.5px; color: var(--m-sub); display: flex; gap: 6px; align-items: center; padding: 0 4px; }
+  .tool svg { flex: none; }
+  .tool b { color: var(--m-text); font-weight: 600; }
+  .card { border: 1px solid var(--m-line); border-radius: 18px; padding: 12px; background: #fff; align-self: stretch; }
+  .card .ttl { font-weight: 700; font-size: 14px; line-height: 1.3; }
+  .card .sub { font-size: 12.5px; color: var(--m-sub); margin-top: 4px; line-height: 1.4; }
+  .card .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .mbtn { font: inherit; font-size: 13.5px; font-weight: 600; border: 0; border-radius: 999px; padding: 9px 0; background: var(--m-surface); color: var(--m-text); cursor: pointer; }
+  .mbtn.p { background: var(--m-blue); color: #fff; }
+  .mbtn:disabled { opacity: .5; }
+  .idea { display: grid; grid-template-columns: 40px 1fr; gap: 10px; }
+  .idea img { width: 40px; height: 40px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .chips span { font-size: 11px; background: var(--m-surface); border-radius: 999px; padding: 2px 7px; color: var(--m-sub); }
+  .art .top { display: flex; align-items: center; gap: 8px; }
+  .art .top img { width: 30px; height: 30px; border-radius: 8px; background: var(--m-surface); }
+  .art .top .k { font-size: 11px; color: var(--m-sub); }
+  .pin { flex: none; padding: 8px 10px 0; }
+  .pin:empty { display: none; }
+  .pin .card { padding: 9px 10px 10px; border-radius: 16px; }
+  .art .top .grow { flex: 1; min-width: 0; }
+  .art .top .ttl { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .art .pv { margin-top: 8px; height: 150px; border-radius: 10px; overflow: hidden; border: 1px solid var(--m-line); position: relative; background: #fdfcf9; }
+  .art .pv iframe { position: absolute; left: 0; top: 0; width: 390px; height: 760px; border: 0; transform-origin: 0 0; }
+  .art .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .art .foot .k { font-size: 11.5px; color: var(--m-sub); }
+  .lnk { font: inherit; font-size: 13px; font-weight: 600; color: var(--m-blue); background: none; border: 0; cursor: pointer; padding: 2px 4px; }
+  .comp { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px 16px; }
+  .comp .in { flex: 1; background: var(--m-surface); border-radius: 999px; padding: 9px 14px; font-size: 13.5px; color: var(--m-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comp .mic { width: 36px; height: 36px; border-radius: 50%; background: var(--m-surface); display: grid; place-items: center; }
+  .comp .mic.on { background: var(--m-blue); }
+  .full { position: absolute; inset: 0; background: #fff; display: none; flex-direction: column; z-index: 5; }
+  .full.on { display: flex; }
+  .full .bar { height: 76px; flex: none; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 10px; border-bottom: 1px solid var(--m-line); font-weight: 700; font-size: 15px; }
+  .full iframe { flex: 1; width: 100%; border: 0; }
+  .empty-note { margin: auto; text-align: center; color: var(--m-sub); font-size: 13px; padding: 0 30px; line-height: 1.5; }
+  .mock { font-size: 12px; color: var(--ink2); margin: 12px 0 0 6px; grid-column: 1 / -1; }
+
+  /* ---------- Behind the scenes, as a printed passbook ---------- */
+  .side { display: flex; flex-direction: column; min-height: 0; padding-top: 4px; }
+  h1 { font-family: "DIN Condensed", sans-serif; font-weight: 700; font-size: 46px; line-height: .95; margin: 0 0 10px; letter-spacing: 0; }
+  .cap { font-size: 17px; line-height: 1.5; min-height: 52px; margin: 0 0 14px; }
+  .cap b { font-weight: 800; }
+  .meter { display: flex; gap: 26px; font-family: "DIN Alternate", sans-serif; font-weight: 700; font-size: 14px; color: var(--ink2); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); padding: 7px 0; }
+  .meter b { font-family: "DIN Condensed", sans-serif; font-size: 23px; color: var(--ink); vertical-align: -2px; margin-left: 4px; }
+  .book { flex: 1; min-height: 0; margin-top: 16px; background: var(--slip); border: 1px solid var(--rule); display: flex; flex-direction: column; }
+  .book .hd { display: grid; grid-template-columns: 58px 132px 1fr 92px; padding: 12px 18px 8px; border-bottom: 2px solid var(--ink); font-family: "DIN Alternate", sans-serif; font-weight: 700; font-size: 13px; color: var(--ink2); }
+  .book .hd span:last-child { text-align: right; }
+  .rows { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .row { display: grid; grid-template-columns: 58px 132px 1fr 92px; padding: 9px 18px; border-bottom: 1px solid var(--rule); font-size: 14px; align-items: start; }
+  .row .t { font-family: "Courier New", monospace; color: var(--ink2); }
+  .row .w { font-weight: 800; }
+  .row .tok { text-align: right; font-family: "DIN Condensed", sans-serif; font-size: 20px; line-height: 1; }
+  .row.old { color: #7D8781; }
+  .row.old .detail { display: none; }
+  .detail { grid-column: 2 / -1; margin-top: 8px; }
+  .pr { font-family: "Courier New", monospace; font-size: 12.5px; line-height: 1.5; color: var(--ink); border-top: 1px dashed var(--rule); padding-top: 6px; margin-top: 6px; white-space: pre-wrap; word-break: break-all; }
+  .seals { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+  .sl { width: 76px; height: 76px; border: 3px solid var(--seal); border-radius: 50%; color: var(--seal); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    font-family: "DIN Condensed", sans-serif; font-weight: 700; line-height: 1; padding: 10px; transform: rotate(-8deg); position: relative; mix-blend-mode: multiply; }
+  .sl small { font-size: 10px; letter-spacing: .02em; }
+  .sl big { font-size: 15px; margin-top: 2px; }
+  .sl::after { content: ""; position: absolute; inset: 4px; border: 1px solid var(--seal); border-radius: 50%; }
+  .sl.ink { border-color: var(--ink); color: var(--ink); }
+  .sl.ink::after { border-color: var(--ink); }
+  .sl:nth-child(2n) { transform: rotate(6deg); }
+  .chk { font-size: 13px; display: flex; gap: 7px; margin-top: 3px; }
+  .chk .x { color: var(--seal); font-weight: 800; } .chk .o { font-weight: 800; }
+  #spd { position: fixed; right: 26px; top: 18px; background: var(--ink); color: #fff; font: 700 13px "DIN Alternate", sans-serif; padding: 6px 10px; border-radius: 2px; z-index: 9; display: none; }
+  .tap { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(0,100,224,.28); pointer-events: none; z-index: 20; animation: tap .6s ease-out forwards; }
+  @keyframes tap { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phones">
+    <div>
+      <p class="ph-label"><img alt="Muse" src="/muse-assets/muse-logo.svg">남편</p>
+      <div class="phone"><div class="screen" id="pA">
+        <div class="sbar"><span>9:41</span><span class="bat"></span></div>
+        <div class="hdr"><div class="ava"><video muted loop playsinline autoplay src="/muse-assets/hatch_connecting.mp4"></video></div><div class="nm">Jolly</div><div class="st"><i></i><span>Here for you</span></div></div>
+        <div class="pin"></div>
+        <div class="chat"></div>
+        <div class="comp"><div class="in">Message Jolly</div><div class="mic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div></div>
+        <div class="full"><div class="bar"><span class="fn"></span><button class="lnk" data-close>Done</button></div><iframe title="artifact"></iframe></div>
+      </div></div>
+    </div>
+    <div>
+      <p class="ph-label"><img alt="Muse" src="/muse-assets/muse-logo.svg">아내</p>
+      <div class="phone"><div class="screen" id="pB">
+        <div class="sbar"><span>9:41</span><span class="bat"></span></div>
+        <div class="hdr"><div class="ava"><video muted loop playsinline autoplay src="/muse-assets/hatch_connecting.mp4"></video></div><div class="nm">Jolly</div><div class="st"><i></i><span>Here for you</span></div></div>
+        <div class="pin"></div>
+        <div class="chat"><p class="empty-note">Nothing shared yet.</p></div>
+        <div class="comp"><div class="in">Message Jolly</div><div class="mic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div></div>
+        <div class="full"><div class="bar"><span class="fn"></span><button class="lnk" data-close>Done</button></div><iframe title="artifact"></iframe></div>
+      </div></div>
+    </div>
+    <p class="mock">The Muse screens are a mock-up (Muse is not available in Korea). The app, its tools, every number and every check on the right are live.</p>
+  </div>
+
+  <div class="side">
+    <h1>Repeat less, together</h1>
+    <p class="cap" id="cap">Muse notices a chore you keep repeating, builds a small app for it, and does the repeats inside that app with you and your family.</p>
+    <div class="meter"><span>Muse tokens used<b id="mTok">0</b></span><span>Agent steps<b id="mSteps">0</b></span><span>Repeats done with the app's buttons<b id="mTaps">0</b> (0 tokens)</span></div>
+    <div class="book">
+      <div class="hd"><span>Time</span><span>Who</span><span>What happened, and who checked it</span><span>Tokens</span></div>
+      <div class="rows" id="rows"></div>
+    </div>
+  </div>
+</div>
+<div id="spd"></div>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const won = (n) => Number(n).toLocaleString('ko-KR') + '원';
+const S = { appId: null, spec: null, members: [], tokens: 0, steps: 0, icon: null, history: '', logLen: 0 };
+const P = { A: $('#pA'), B: $('#pB') };
+const ICON_TOOL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12h8M12 8v8"/></svg>';
+const ICON_WAVE = '<svg width="34" height="14" viewBox="0 0 34 14" fill="#fff"><rect x="0" y="5" width="2" height="4" rx="1"/><rect x="4" y="2" width="2" height="10" rx="1"/><rect x="8" y="4" width="2" height="6" rx="1"/><rect x="12" y="0" width="2" height="14" rx="1"/><rect x="16" y="3" width="2" height="8" rx="1"/><rect x="20" y="5" width="2" height="4" rx="1"/><rect x="24" y="2" width="2" height="10" rx="1"/><rect x="28" y="4" width="2" height="6" rx="1"/><rect x="32" y="6" width="2" height="2" rx="1"/></svg>';
+
+async function api(path, body, token) {
+  const res = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  return res.json();
+}
+function spend(u) { if (!u) return 0; const n = (u.input || 0) + (u.output || 0); S.tokens += n; S.steps += 1; $('#mTok').textContent = S.tokens.toLocaleString(); $('#mSteps').textContent = S.steps; return n; }
+window.setCap = (h) => { $('#cap').innerHTML = h; };
+window.speed = (on, t) => { const b = $('#spd'); b.textContent = t || ''; b.style.display = on ? 'block' : 'none'; };
+
+/* ---------- Muse phone helpers ---------- */
+function status(p, text, busy) {
+  const h = $('.hdr', p); h.classList.toggle('busy', !!busy); $('.st span', h).textContent = text;
+  const v = $('.ava video', h); const want = busy ? '/muse-assets/hatch_working.mp4' : '/muse-assets/hatch_connecting.mp4';
+  if (!v.src.endsWith(want)) { v.src = want; v.play().catch(() => {}); }
+}
+function push(p, html) {
+  const c = $('.chat', p); const n = $('.empty-note', c); if (n) n.remove();
+  const d = document.createElement('div'); d.innerHTML = html.trim(); const el = d.firstElementChild; c.appendChild(el);
+  const down = () => { c.scrollTop = c.scrollHeight; }; down(); requestAnimationFrame(down); setTimeout(down, 120); setTimeout(down, 600);
+  return el;
+}
+const jolly = (p, t) => push(p, `<div class="b j">${esc(t)}</div>`);
+const me = (p, t) => push(p, `<div class="b u">${esc(t)}</div>`);
+const tool = (p, html) => push(p, `<div class="tool">${ICON_TOOL}<span>${html}</span></div>`);
+function voiceBubble(p, secs) { return push(p, `<div class="b u"><div class="v">${ICON_WAVE}<span>0:0${Math.max(1, Math.round(secs))}</span></div><div class="tx">…</div></div>`); }
+function typing(p, text) { $('.comp .in', p).textContent = text || 'Message Jolly'; $('.comp .in', p).style.color = text ? 'var(--m-text)' : ''; }
+function ripple(el) {
+  if (!el) return; const r = el.getBoundingClientRect(); const t = document.createElement('div'); t.className = 'tap';
+  t.style.left = (r.left + r.width / 2) + 'px'; t.style.top = (r.top + r.height / 2) + 'px'; t.style.position = 'fixed'; document.body.appendChild(t); setTimeout(() => t.remove(), 700);
+}
+window.tapEl = (sel, which) => { const el = $(sel, which ? P[which] : document); ripple(el); return el; };
+
+/* ---------- Behind the scenes ledger ---------- */
+function clock() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function seal(top, bottom, ink) { return `<span class="sl${ink ? ' ink' : ''}"><small>${esc(top)}</small><big>${esc(bottom)}</big></span>`; }
+function entry({ who, what, tok = '', detail = '', seals = [] }) {
+  const rows = $('#rows'); rows.querySelectorAll('.row').forEach((r) => r.classList.add('old'));
+  const el = document.createElement('div'); el.className = 'row';
+  el.innerHTML = `<span class="t">${clock()}</span><span class="w">${esc(who)}</span><span>${what}</span><span class="tok">${tok === '' ? '' : esc(typeof tok === 'number' ? tok.toLocaleString() : tok)}</span>${(detail || seals.length) ? `<div class="detail">${detail}${seals.length ? `<div class="seals">${seals.join('')}</div>` : ''}</div>` : ''}`;
+  rows.prepend(el);
+  while (rows.children.length > 7) rows.lastElementChild.remove();
+  return el;
+}
+const pr = (t) => `<div class="pr">${esc(t)}</div>`;
+
+/* ---------- Artifacts ---------- */
+function artifactCard(p, member) {
+  const pin = $('.pin', p); pin.innerHTML = `<div class="card art"><div class="top"><img alt="" src=""><div class="grow"><div class="ttl">${esc(S.spec.title)}</div><div class="k">Artifact${member.role === 'owner' ? '' : ', shared by 남편'}</div></div><button class="lnk" data-share>Share</button><button class="lnk" data-open>Open</button></div>
+    <div class="pv"><iframe title="${esc(S.spec.title)}"></iframe></div></div>`;
+  const el = pin.firstElementChild;
+  const f = $('iframe', el); const pv = $('.pv', el);
+  f.src = `/a/${S.appId}?t=${member.token}`;
+  const fit = () => { f.style.transform = `scale(${pv.clientWidth / 390})`; }; fit();
+  if (S.icon) $('.top img', el).src = S.icon(member);
+  $('[data-open]', el).onclick = () => openFull(p, member);
+  $('[data-share]', el).style.display = member.role === 'owner' ? '' : 'none';
+  $('[data-share]', el).onclick = () => demo.share();
+  return el;
+}
+function openFull(p, member) { const f = $('.full', p); $('.fn', f).textContent = S.spec.title; $('iframe', f).src = `/a/${S.appId}?t=${member.token}`; f.classList.add('on'); }
+document.querySelectorAll('[data-close]').forEach((b) => b.onclick = () => b.closest('.full').classList.remove('on'));
+function refreshAll() { document.querySelectorAll('.screen iframe').forEach((f) => { try { f.contentWindow.__bveRefresh && f.contentWindow.__bveRefresh(); } catch (e) {} }); }
+function reloadAll() { document.querySelectorAll('.screen iframe').forEach((f) => { if (f.src) f.src = f.src; }); }
+setInterval(async () => {
+  if (!S.appId) return; const st = await api(`/api/apps/${S.appId}/state`, null, S.members[0].token);
+  $('#mTaps').textContent = st.taps || 0;
+  if (st.log.length !== S.logLen) { S.logLen = st.log.length; refreshAll(); }
+}, 1500);
+
+/* ---------- Voice ---------- */
+function b64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+async function hear(file, member) {
+  const url = `/voice/${file}.wav`; const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
+  new Audio(url).play().catch(() => {});
+  const v = await api(`/api/apps/${S.appId}/voice`, { audio: b64(bytes) }, member.token);
+  return { v, secs: (bytes.length - 44) / 32000 };
+}
+
+/* ---------- Verified look change (same checks as /studio) ---------- */
+function sandbox(html) { return new Promise((resolve) => { const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;left:-2000px;top:0;width:390px;height:844px;'; f.onload = () => resolve(f); f.srcdoc = html; document.body.appendChild(f); }); }
+async function inspect(html) {
+  const f = await sandbox(html); const d = f.contentDocument; const m = {};
+  d.querySelectorAll('[data-bve-id]').forEach((el) => { const cs = d.defaultView.getComputedStyle(el); m[el.dataset.bveId] = { fontSize: cs.fontSize, color: cs.color, backgroundColor: cs.backgroundColor, display: cs.display }; });
+  const s = []; for (const t of f.contentWindow.__smoke || []) { let ok = false; try { ok = Boolean(await t.run()); } catch (e) {} s.push({ name: t.name, ok }); }
+  f.remove(); return { m, s };
+}
+
+/* ---------- The demo ---------- */
+const demo = window.demo = {
+  async notice() {
+    const p = P.A;
+    S.history = S.history || (await api('/api/demo/history')).history;
+    status(p, 'Looking at your last two weeks', true);
+    const r = await api('/api/propose', { history: S.history });
+    const n = spend(r.usage);
+    status(p, 'Here for you', false);
+    if (!r.spec) { jolly(p, r.message || 'I could not find a repeat.'); return r; }
+    S.spec = r.spec;
+    jolly(p, r.message);
+    const ideaEl = push(p, `<div class="card"><div class="idea"><img alt="" src="/muse-assets/icon-piggybank@2x.webp"><div><div class="ttl">I can build ${esc(r.spec.title)} for you</div>
+      <div class="sub">${esc(r.spec.subtitle || '')}</div><div class="chips">${r.spec.entity.fields.map((f) => `<span>${esc(f.label)}</span>`).join('')}</div></div></div>
+      <div class="acts"><button class="mbtn" data-no>Not now</button><button class="mbtn p" data-yes>Build it</button></div></div>`);
+    $('[data-yes]', ideaEl).onclick = (e) => { e.target.disabled = true; demo.build(); };
+    const lines = S.history.split('\n').filter((l) => /승인/.test(l)).slice(0, 4).join('\n');
+    entry({ who: "남편's Jolly", what: `Found the chore that repeats and wrote a spec for an app, <b>not code</b>.`, tok: n,
+      detail: pr(lines + '\n… 34 card texts copied by hand in two weeks') + pr('spec: ' + r.spec.title + '  fields: ' + r.spec.entity.fields.map((f) => `${f.key}:${f.type}`).join(', ')),
+      seals: [seal('MUSE SPARK 1.3', 'WROTE SPEC'), seal('CODE', 'CHECKED', true)] });
+    return r;
+  },
+  async build() {
+    const p = P.A;
+    status(p, `Building ${S.spec.title}`, true);
+    const r = await api('/api/apps', { spec: S.spec, ownerName: '남편', seedDemo: true });
+    S.appId = r.id; S.members = [{ name: '남편', role: 'owner', token: r.ownerToken }];
+    const st = await api(`/api/apps/${S.appId}/state`, null, r.ownerToken);
+    const card = artifactCard(p, S.members[0]);
+    jolly(p, `${S.spec.title} 앱을 만들었어요. 최근 3개월 카드 결제 ${st.total.toLocaleString()}건도 넣어 두었어요.`);
+    const e = entry({ who: 'The app', what: `A fixed renderer built the app from the spec and imported <b>${st.total.toLocaleString()}</b> past payments.`, tok: '',
+      seals: [seal('RENDERER', 'BUILT IT', true)] });
+    for (let i = 0; i < 40; i++) {
+      await new Promise((ok) => setTimeout(ok, 1500));
+      const s2 = await api(`/api/apps/${S.appId}/state`, null, r.ownerToken);
+      if (s2.icon && s2.icon.status === 'ready') {
+        S.icon = (m) => `/a/${S.appId}/icon?t=${encodeURIComponent(m.token)}`;
+        document.querySelectorAll('.art .top img').forEach((im) => { im.src = S.icon(S.members[0]); });
+        $('.seals', e).insertAdjacentHTML('beforeend', seal('MUSE IMAGE', 'DREW ICON'));
+        break;
+      }
+    }
+    status(p, 'Here for you', false);
+    return r;
+  },
+  async say(file, ownerIndex = 0) {
+    const p = P.A; const m = S.members[ownerIndex];
+    status(p, 'Listening', true);
+    const bub = voiceBubble(p, 3.5);
+    const { v, secs } = await hear(file, m);
+    $('.v span', bub).textContent = '0:0' + Math.max(1, Math.round(secs));
+    $('.tx', bub).textContent = v.transcript;
+    const diff = v.withoutAppWords && v.withoutAppWords !== v.transcript;
+    entry({ who: "남편's Jolly", what: `Heard the payment twice at once, with the words this app knows and without them.`, tok: '',
+      detail: pr(`with the app's words: ${v.transcript}`) + (diff ? pr(`without them:         ${v.withoutAppWords}`) : ''),
+      seals: [seal('VOICE TRANSCRIBE', 'HEARD IT')] });
+    status(p, 'Adding it to the ledger', true);
+    const r = await api(`/api/apps/${S.appId}/assist`, { message: v.transcript, heard: [v.transcript, v.withoutAppWords].filter(Boolean) }, m.token);
+    const n = spend(r.usage);
+    const ops = r.steps.filter((s) => s.type === 'op');
+    for (const o of ops) tool(p, `Used <b>${esc(S.spec.title)}</b>: ${esc(o.name)}`);
+    jolly(p, r.message);
+    status(p, 'Here for you', false);
+    entry({ who: "남편's Jolly", what: `Saved it with <b>one</b> call to the app. The amount had to be a number that was actually said.`, tok: n,
+      detail: pr(ops.map((o) => `${o.name}(${JSON.stringify(o.args.values || o.args)})  ${o.ok ? 'ok' : 'refused'}`).join('\n')),
+      seals: [seal('MUSE SPARK 1.3', 'ONE CALL'), seal('CODE', 'AMOUNT SAID', true)] });
+    refreshAll();
+    return r;
+  },
+  async ask(text) {
+    const p = P.A; const m = S.members[0];
+    typing(p, text); await new Promise((ok) => setTimeout(ok, 700)); typing(p, ''); me(p, text);
+    status(p, 'Asking the app', true);
+    const r = await api(`/api/apps/${S.appId}/assist`, { message: text }, m.token);
+    const n = spend(r.usage);
+    const ops = r.steps.filter((s) => s.type === 'op');
+    for (const o of ops) tool(p, `Used <b>${esc(S.spec.title)}</b>: ${esc(o.name)}`);
+    jolly(p, r.message);
+    status(p, 'Here for you', false);
+    const res = ops[0] && ops[0].result;
+    const groups = res && res.groups ? res.groups.slice(0, 3).map((g) => `${Object.values(g)[0]}  ${won(g.value)}`).join('\n') : (res && res.value != null ? String(res.value) : '');
+    entry({ who: "남편's Jolly", what: `Answered with <b>one query</b>. The totals come from code, not from re-reading the history.`, tok: n,
+      detail: ops.map((o) => pr(`${o.name}(${JSON.stringify(o.args)})`)).join('') + (groups ? pr(groups) : ''),
+      seals: [seal('CODE', 'EXACT SUM', true)] });
+    return r;
+  },
+  async share() {
+    const pa = P.A; const pb = P.B;
+    const r = await api(`/api/apps/${S.appId}/invite`, { name: '아내', role: 'member' }, S.members[0].token);
+    S.members.push({ name: r.name, role: r.role, token: r.token });
+    tool(pa, `Shared <b>${esc(S.spec.title)}</b> with 아내 as a member`);
+    const inv = push(pb, `<div class="card"><div class="ttl">남편 shared ${esc(S.spec.title)} with you</div><div class="sub">You can add payments and ask questions.</div><div class="acts"><button class="mbtn" data-no>Later</button><button class="mbtn p" data-join>Open</button></div></div>`);
+    $('[data-join]', inv).onclick = (e) => { e.target.disabled = true; demo.join(); };
+    entry({ who: '남편', what: `Invited 아내 as a <b>member</b>: she can add and ask, but not change amounts, delete history or reshape the app.`, tok: '', seals: [seal('ROLE', 'MEMBER', true)] });
+    return r;
+  },
+  async join() {
+    const pb = P.B; const m = S.members[1];
+    const ap = push(pb, `<div class="card"><div class="ttl">Let Jolly work in ${esc(S.spec.title)}?</div><div class="sub">Jolly will connect to the app as 아내 with member access: add records and ask questions. Amounts and history stay with the owner.</div><div class="acts"><button class="mbtn" data-no>Deny</button><button class="mbtn p" data-allow>Allow</button></div></div>`);
+    $('[data-allow]', ap).onclick = (e) => { e.target.disabled = true; $('[data-no]', ap).disabled = true; artifactCard(pb, m); jolly(pb, `연결했어요. 이제 ${S.spec.title} 앱에서 대신 기록하고 물어볼 수 있어요.`);
+      entry({ who: "아내's Jolly", what: `Connected to the app's MCP server with her own token. Same tools, same role checks.`, tok: '', seals: [seal('MCP', 'MEMBER', true)] }); };
+    return ap;
+  },
+  async tapQuick() {
+    const pb = P.B; const m = S.members[1];
+    openFull(pb, m); await new Promise((ok) => setTimeout(ok, 1800));
+    const fr = $('.full iframe', pb); const btn = fr.contentDocument.querySelector('.qbtn');
+    if (btn) { const r = btn.getBoundingClientRect(); const fb = fr.getBoundingClientRect(); const t = document.createElement('div'); t.className = 'tap'; t.style.position = 'fixed'; t.style.left = (fb.left + r.left + r.width / 2) + 'px'; t.style.top = (fb.top + r.top + r.height / 2) + 'px'; document.body.appendChild(t); setTimeout(() => t.remove(), 700); btn.click(); }
+    const label = btn ? btn.textContent : 'quick button';
+    entry({ who: '아내', what: `Tapped <b>${esc(label)}</b> in the app. A repeat done with the app's own button.`, tok: 0, seals: [seal('APP BUTTON', '0 TOKENS', true)] });
+    await new Promise((ok) => setTimeout(ok, 1800)); refreshAll();
+    $('.full', pb).classList.remove('on');
+  },
+  async herAgent(text) {
+    const pb = P.B; const m = S.members[1];
+    typing(pb, text); await new Promise((ok) => setTimeout(ok, 700)); typing(pb, ''); me(pb, text);
+    status(pb, `Working in ${S.spec.title}`, true);
+    const r = await api('/api/demo/mcp-agent', { appId: S.appId, message: text }, m.token);
+    const n = spend(r.usage);
+    const calls = (r.wire || []).filter((w) => w.method === 'tools/call');
+    for (const c of calls.filter((c) => c.params.name !== 'describe_app')) { const bad = c.result && c.result.ok === false; tool(pb, `${bad ? 'Refused by' : 'Used'} <b>${esc(S.spec.title)}</b> over MCP: ${esc(c.params.name)}`); }
+    jolly(pb, r.message);
+    status(pb, 'Here for you', false);
+    const refused = calls.some((c) => c.result && c.result.ok === false);
+    entry({ who: "아내's Jolly", what: refused ? `Tried to change an amount. <b>The app refused</b>: members cannot.` : `Added a payment through the app's MCP tools, found on its own.`, tok: n,
+      detail: pr((r.wire || []).map((w) => `${w.method}${w.params && w.params.name ? ' ' + w.params.name : ''}  ${w.result && w.result.ok === false ? 'refused: ' + w.result.error : 'ok'}`).join('\n')),
+      seals: refused ? [seal('ROLE CHECK', 'REFUSED', false)] : [seal('MUSE SPARK 1.3', 'OVER MCP')] });
+    refreshAll();
+    return r;
+  },
+  async look(file, text) {
+    const p = P.A; const owner = S.members[0];
+    let q = text;
+    if (file) { status(p, 'Listening', true); const bub = voiceBubble(p, 3); const { v, secs } = await hear(file, owner); $('.v span', bub).textContent = '0:0' + Math.max(1, Math.round(secs)); $('.tx', bub).textContent = v.transcript; q = v.transcript; }
+    else { typing(p, text); await new Promise((ok) => setTimeout(ok, 700)); typing(p, ''); me(p, text); }
+    status(p, 'Changing how the app looks', true);
+    const cur = (await api(`/api/apps/${S.appId}/html`, null, owner.token)).html;
+    const before = await inspect(cur);
+    const r = await api(`/api/apps/${S.appId}/edit`, { request: q, computed: before.m }, owner.token);
+    const n = spend(r.usage);
+    const calls = (r.steps || []).filter((s) => s.type === 'model').flatMap((s) => s.calls);
+    const checks = (r.steps || []).filter((s) => s.type === 'verify').flatMap((s) => s.checks);
+    const review = (r.steps || []).find((s) => s.type === 'review');
+    const proposed = r.status === 'done' ? r.html : r.proposedHtml;
+    let applied = false, broke = [];
+    if (proposed && r.layoutHash) {
+      const after = await inspect(proposed);
+      broke = after.s.filter((t, i) => !t.ok && before.s[i] && before.s[i].ok).map((t) => t.name);
+      if (!broke.length && r.status === 'done') { await api(`/api/apps/${S.appId}/commit-layout`, { hash: r.layoutHash }, owner.token); applied = true; reloadAll(); }
+    }
+    for (const c of calls) tool(p, `Used <b>${esc(S.spec.title)}</b>: ${esc(c.name)}`);
+    const KO = { 'Add form saves a record': '기록 추가', 'Summary cards update': '요약 카드', 'On/off switch works': '켜고 끄기' };
+    jolly(p, applied ? '바꿨어요. 그 버튼만 바뀌었고 다른 버튼도 모두 그대로 잘 돼요. 아내 화면에도 바로 반영됐어요.' : broke.length ? `그대로 두었어요. 그렇게 바꾸면 ${broke.map((b) => KO[b] || b).join(', ')} 기능이 망가져요.` : (r.message || '그 변경은 할 수 없었어요.'));
+    status(p, 'Here for you', false);
+    const chk = checks.map((c) => `<div class="chk"><span class="${c.ok ? 'o' : 'x'}">${c.ok ? '✓' : '✗'}</span>${esc(c.label)}</div>`).join('') + (review ? `<div class="chk"><span class="${review.satisfied ? 'o' : 'x'}">${review.satisfied ? '✓' : '✗'}</span>Reviewed by Muse Spark Open</div>` : '') + (broke.length ? broke.map((b) => `<div class="chk"><span class="x">✗</span>${esc(b)}</div>`).join('') : (proposed ? '<div class="chk"><span class="o">✓</span>The app\'s own buttons still work, clicked in a sandbox copy</div>' : ''));
+    entry({ who: "남편's Jolly", what: applied ? `Changed the look with <b>one tool call</b>, then went live on both phones after every check.` : `Proposed a change that would break the app. <b>Kept as it was.</b>`, tok: n,
+      detail: calls.map((c) => pr(`${c.name}(${JSON.stringify(c.args)})`)).join('') + chk,
+      seals: applied ? [seal('CODE', 'ONLY TARGET', true), seal('SPARK OPEN', 'REVIEWED'), seal('BOTH PHONES', 'APPLIED')] : [seal('BUTTONS CHECK', 'KEPT')] });
+    return r;
+  },
+};
+</script>
+</body>
+</html>

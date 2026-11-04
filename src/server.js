@@ -13,6 +13,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEMO = path.join(HERE, '..', 'demo', 'app.html');
 const UI = path.join(HERE, '..', 'public', 'index.html');
 const STUDIO = path.join(HERE, '..', 'public', 'studio.html');
+const MUSE = path.join(HERE, '..', 'public', 'muse.html');
+const TYPES = { mp4: 'video/mp4', webp: 'image/webp', svg: 'image/svg+xml', png: 'image/png', wav: 'audio/wav' };
 const PORT = Number(process.env.PORT || 8787);
 
 function json(res, code, body) {
@@ -45,6 +47,21 @@ function readBody(req) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
+    if (req.method === 'GET' && url.pathname === '/muse') {
+      const html = await readFile(MUSE, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+      return;
+    }
+    const asset = url.pathname.match(/^\/muse-assets\/([\w@.-]+\.(mp4|webp|svg|png))$/);
+    if (req.method === 'GET' && asset) {
+      try {
+        const bytes = await readFile(path.join(HERE, '..', 'public', 'muse-assets', asset[1]));
+        res.writeHead(200, { 'Content-Type': TYPES[asset[2]], 'Cache-Control': 'max-age=3600' });
+        res.end(bytes);
+      } catch { json(res, 404, { error: 'not found' }); }
+      return;
+    }
     if (req.method === 'GET' && url.pathname === '/studio') {
       const html = await readFile(STUDIO, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });

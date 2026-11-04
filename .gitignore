@@ -14,3 +14,4 @@ build/
 demo/*.edited.html
 data/
 public/voice/
+public/muse-assets/
